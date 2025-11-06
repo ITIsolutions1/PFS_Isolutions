@@ -21,7 +21,7 @@
   <div class="d-flex justify-content-between align-items-center mb-4 mt-5">
     <div>
       <h2 class="fw-bold text-danger mb-1">
-        <i class="bi bi-chat-dots-fill me-2"></i>Follow Ups — 
+        <i class="bi bi-chat-dots-fill me-2"></i>Follow Ups —
         <span class="text-dark">{{ $lead->crm->name ?? 'Without CRM' }}</span>
       </h2>
       <p class="text-muted small mb-0">Monitor communication activities and progress of each lead.</p>
@@ -30,11 +30,11 @@
       <i class="bi bi-plus-circle me-1"></i> Add Follow Up
     </button>
 
-     <button class="btn btn-danger shadow-sm rounded-3" data-bs-toggle="modal" data-bs-target="#addFollowUpModal">
+     <button class="btn btn-danger shadow-sm rounded-3" data-bs-toggle="modal" data-bs-target="#addAppointmentModal">
       <i class="bi bi-plus-circle me-1"></i> Add Appointment
     </button>
   </div>
-    
+
   </div>
 
   {{-- Timeline Follow-ups --}}
@@ -55,6 +55,13 @@
                 </h6>
                 <span class="badge bg-light text-dark border">{{ ucfirst($f->type) }}</span>
               </div>
+             @if($f->type == 'appointment')
+                <span class="badge bg-danger-subtle text-danger border border-danger px-4 py-2 fs-6 rounded-pill">
+                    <i class="bi bi-bell-fill me-2"></i>
+                    Reminder Appointment:
+                    <strong class="text-dark">{{ \Carbon\Carbon::parse($f->date)->format('d M Y, H:i') }}</strong>
+                </span>
+            @endif
               <p class="text-muted small mb-2">
                 <i class="bi bi-clock me-1"></i>{{ $f->created_at->diffForHumans() }}
               </p>
@@ -85,20 +92,24 @@
 
 <!-- modal appointment -->
  <!-- Modal -->
-<div class="modal fade" id="addFollowUpModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog">
-    <form id="followUpForm">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title">Add Appointment</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-        </div>
-        <div class="modal-body">
-          <input type="hidden" name="lead_id" value="{{ $lead->id }}">
-          <div class="mb-3">
+
+{{-- APPOINTMENT MODAL  --}}
+
+<div class="modal fade" id="addAppointmentModal" tabindex="-1" aria-labelledby="addAppointmentLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <form method="POST" action="{{ route('appointments.store', ['lead_id' => $lead->id]) }}" class="modal-content rounded-4 shadow">
+      @csrf
+      <div class="modal-header bg-danger text-white rounded-top-4">
+        <h5 class="modal-title"><i class="bi bi-plus-circle me-1"></i> Add Appointment</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body bg-light">
+        <input type="hidden" name="lead_id" value="{{ $lead->id }}">
+          {{-- <div class="mb-3">
             <label>Title</label>
             <input type="text" name="title" class="form-control" required>
-          </div>
+          </div> --}}
           <div class="mb-3">
             <label>Reminder Date & Time</label>
             <input type="datetime-local" name="reminder_at" class="form-control" required>
@@ -107,11 +118,10 @@
             <label>Description</label>
             <textarea name="description" class="form-control"></textarea>
           </div>
-        </div>
-        <div class="modal-footer">
-          <button type="submit" class="btn btn-primary">Save</button>
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-        </div>
+      </div>
+      <div class="modal-footer bg-light">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="submit" class="btn btn-danger px-4">Save</button>
       </div>
     </form>
   </div>
@@ -127,13 +137,13 @@
         <h5 class="modal-title"><i class="bi bi-plus-circle me-1"></i> Add Follow Up</h5>
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
       </div>
-      
+
       <div class="modal-body bg-light">
         <div class="mb-3">
           <label for="date" class="form-label fw-semibold">Date</label>
           <input type="date" name="date" id="date" class="form-control shadow-sm" required>
         </div>
-        
+
         <div class="mb-3">
         <label for="type" class="form-label fw-semibold">Follow Up Type</label>
         <select name="type" id="type" class="form-select shadow-sm" required>
@@ -147,7 +157,7 @@
 
         <div class="mb-3">
           <label for="notes" class="form-label fw-semibold">Notes</label>
-          <textarea name="notes" id="notes" rows="4" class="form-control shadow-sm" 
+          <textarea name="notes" id="notes" rows="4" class="form-control shadow-sm"
             placeholder="Write a concise and informative follow-up note..." required></textarea>
         </div>
       </div>

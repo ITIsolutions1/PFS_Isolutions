@@ -144,6 +144,16 @@
         animation: shimmer 1.4s infinite;
       }
 
+      #notificationsModal .modal-content {
+        max-height: 50vh;
+        overflow: hidden;
+        }
+
+    /* #notificationsModal .modal-body {
+        overflow-y: auto;
+        max-height: calc(300px - 120px);
+        } */
+
       @keyframes shimmer {
         0% {
           left: -70%;
@@ -193,4 +203,96 @@
       </div>
     </div>
   </div>
+
+<div class="modal fade" id="notificationsModal" tabindex="-1" aria-labelledby="notificationsModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content shadow-lg border-0 rounded-4">
+      <div class="modal-header bg-danger text-white rounded-top-4">
+        <h5 class="modal-title fw-semibold d-flex align-items-center gap-2" id="notificationsModalLabel">
+          <i class="bi bi-bell-fill"></i> Reminder Appointments
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <div class="modal-body bg-light" id="canvas_for_notifications">
+        <div class="text-center text-muted my-4" id="loading_msg">
+          <div class="spinner-border text-primary" role="status"></div>
+          <p class="mt-2">Loading reminders...</p>
+        </div>
+      </div>
+
+      <div class="modal-footer bg-light rounded-bottom-4">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+          <i class="bi bi-x-circle"></i> Close
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', async () => {
+    // Pastikan Bootstrap JS sudah dimuat
+    const modalEl = document.getElementById('notificationsModal');
+    const modal = new bootstrap.Modal(modalEl);
+    const canvas = document.getElementById('canvas_for_notifications');
+    const loadingMsg = document.getElementById('loading_msg');
+
+    // Tampilkan modal
+    modal.show();
+
+    try {
+        const response = await fetch('/api/get_appointment');
+        const data = await response.json();
+
+        // Bersihkan loading spinner
+        loadingMsg.remove();
+
+        if (!data.length) {
+            canvas.insertAdjacentHTML('beforeend', `
+                <div class="alert alert-info text-center">
+                    <i class="bi bi-info-circle"></i> No reminders found.
+                </div>
+            `);
+            return;
+        }
+
+        // Loop dan tampilkan setiap reminder
+        data.forEach(item => {
+            if (!item.date) return;
+
+            const d = new Date(item.date);
+
+            // Pisahkan tanggal dan jam secara terpisah
+            const tanggal = d.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+            const jam = d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+
+            canvas.insertAdjacentHTML('beforeend', `
+                <div class="card mb-3 border-0 shadow-sm rounded-4">
+                    <div class="card-body">
+                        <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center mb-2 gap-2">
+                            <span class="badge bg-danger-subtle text-danger border border-danger px-4 py-2 fs-6 rounded-pill">
+                                <i class="bi bi-calendar-event me-2"></i>
+                                <strong class="text-dark">${tanggal}</strong>
+                            </span>
+                            <span class="badge bg-primary-subtle text-primary border border-primary px-4 py-2 fs-6 rounded-pill">
+                                <i class="bi bi-clock me-2"></i>
+                                <strong class="text-dark">${jam}</strong>
+                            </span>
+                        </div>
+                        <p class="mb-0 text-secondary">${item.notes || '(No notes provided)'}</p>
+                    </div>
+                </div>
+            `);
+        });
+
+
+    } catch (err) {
+        console.error(err);
+        loadingMsg.innerHTML = `<div class="alert alert-danger">Failed to load reminders.</div>`;
+    }
+});
+</script>
+@endpush
 </x-app-layout>

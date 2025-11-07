@@ -109,12 +109,53 @@ class FollowUpController extends Controller
         // $reminders = FollowUp::where('type', 'appointment')->with('lead')->get();
         // return "test api";
         $reminders = FollowUp::where('type', 'appointment')
-        ->whereNotNull('date')                // pastikan kolom date tidak kosong/null
+        ->whereNotNull('date')
+        ->whereNull('dismissable')
+        ->orWhere('dismissable', '!=', 'dismissed')                // pastikan kolom date tidak kosong/null
         ->where('date', '>', Carbon::now())   // hanya yang tanggalnya di masa depan
-        ->with('lead')
+        ->with('lead.crm')
         ->orderBy('date', 'asc')              // urutkan dari yang paling dekat
         ->get();
-        
+
         return $reminders;
     }
+
+    public function dismiss_appointment($id){
+        try{
+            $reminder = FollowUp::findOrFail($id);
+            $reminder->update([
+                'dismissable' => 'dismissed'
+            ]);
+            return response()->json(['status' => 'success', 'message' => 'Appointment dismissed']);
+
+        }catch(\Exception $e){
+            return response()->json(['status' => 'error', 'message' => 'ERROR']);
+        }
+
+    }
+
+    public function dismiss_all_appointment(){
+
+        try{
+
+            $reminders = FollowUp::where('type', 'appointment')->whereNull('dismissable')->get();
+            foreach($reminders as $reminder){
+                $reminder->update(['dismissable' => 'dismissed']);
+            }
+            return response()->json(['status' => 'success', 'message' => 'All Appointment dismissed']);
+
+        }catch(\Exception $e){
+            return response()->json(['status' => 'error', 'message' => 'ERROR']);
+        }
+    }
+
+    public function snooze_reminders(Request $request){
+        return response()->json([
+            'status' => 'success',
+            'message' => 'test snooze',
+            'duration' => $request->duration,
+            'user_id' => $request->user_id,
+        ]);
+    }
 }
+

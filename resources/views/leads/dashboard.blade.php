@@ -145,7 +145,7 @@
       }
 
       #notificationsModal .modal-content {
-        max-height: 50vh;
+        max-height: 63vh;
         overflow: hidden;
         }
 
@@ -221,10 +221,27 @@
         </div>
       </div>
 
-      <div class="modal-footer bg-light rounded-bottom-4">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-          <i class="bi bi-x-circle"></i> Close
-        </button>
+      <div class="modal-footer bg-light rounded-bottom-4 justify-between">
+        <div>
+            <form action="">
+                <select id="snooze_duration" class="form-select" aria-label="Default select example">
+                    <option selected>Snooze Until</option>
+                    <option value="1m">1 minute</option>
+                    <option value="5m">5 minute</option>
+                    <option value="1h">1 Hours</option>
+                </select>
+            </form>
+        </div>
+        <div>
+            <button onclick="dismissAll()" type="button" class="btn btn-danger">
+            <i class="bi bi-x-circle"></i> Dismiss All
+            </button>
+
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+            <i class="bi bi-x-circle"></i> Close
+            </button>
+        </div>
+
       </div>
     </div>
   </div>
@@ -232,6 +249,26 @@
 
 @push('scripts')
 <script>
+const snooze_duration = document.querySelector('#snooze_duration')
+snooze_duration.addEventListener('change', async (item) => {
+    const response = await fetch('/api/snooze_reminders', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+        },
+        body: JSON.stringify({
+            duration: '5m',
+            user_id: 1
+        })
+    });
+    const data3 = await response.json();
+    console.log(data3)
+
+    const value = item.target.value;
+    console.log(value)
+})
+
 document.addEventListener('DOMContentLoaded', async () => {
     // Pastikan Bootstrap JS sudah dimuat
     const modalEl = document.getElementById('notificationsModal');
@@ -239,8 +276,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     const canvas = document.getElementById('canvas_for_notifications');
     const loadingMsg = document.getElementById('loading_msg');
 
+    const response2 = await fetch('/api/get_appointment')
+    const data2 = await response2.json()
+    console.log(data2.length)
     // Tampilkan modal
-    modal.show();
+    if(data2.length > 0){
+        modal.show();
+    }
+
 
     try {
         const response = await fetch('/api/get_appointment');
@@ -269,9 +312,13 @@ document.addEventListener('DOMContentLoaded', async () => {
             const jam = d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
 
             canvas.insertAdjacentHTML('beforeend', `
-                <div class="card mb-3 border-0 shadow-sm rounded-4">
+                <div class="card mb-3 border-0 shadow-sm rounded-4 reminder-card" id="reminder-${item.id}">
                     <div class="card-body">
-                        <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center mb-2 gap-2">
+                        <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-between mb-2 gap-2">
+                            <span>
+                                <p class="fs-5 fw-bold text-danger"><i class="fas fa-user-alt"></i> ${item.lead.crm.name}</p>
+                            </span>
+                            <div>
                             <span class="badge bg-danger-subtle text-danger border border-danger px-4 py-2 fs-6 rounded-pill">
                                 <i class="bi bi-calendar-event me-2"></i>
                                 <strong class="text-dark">${tanggal}</strong>
@@ -280,6 +327,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                                 <i class="bi bi-clock me-2"></i>
                                 <strong class="text-dark">${jam}</strong>
                             </span>
+                            <span class="ms-2">
+                                <button onclick="dismiss(${item.id})" style="--bs-btn-padding-y: .15rem; --bs-btn-padding-x: .5rem;" class="btn  btn-outline-danger">dismiss</button>
+                            </span>
+                            </div>
                         </div>
                         <p class="mb-0 text-secondary">${item.notes || '(No notes provided)'}</p>
                     </div>
@@ -293,6 +344,31 @@ document.addEventListener('DOMContentLoaded', async () => {
         loadingMsg.innerHTML = `<div class="alert alert-danger">Failed to load reminders.</div>`;
     }
 });
+
+async function dismiss(id){
+    const response = await fetch('/api/dismiss_appointment/' + id)
+    const data = await response.json()
+    console.log(data)
+    const reminder = document.querySelector('#reminder-' + id)
+    text = reminder.getAttribute('id')
+    if(reminder){
+        reminder.remove()
+    }
+    console.log(text)
+}
+
+async function dismissAll() {
+    const reminders = document.querySelectorAll('.reminder-card')
+    reminders.forEach(element => {
+        id = element.getAttribute('id')
+        console.log(id)
+        element.remove()
+    });
+    const response = await fetch('/api/dismiss_all_appointment')
+    const data = await response.json()
+    console.log(data)
+    // console.log(reminders)
+}
 </script>
 @endpush
 </x-app-layout>

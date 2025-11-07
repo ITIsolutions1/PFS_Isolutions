@@ -13,6 +13,7 @@ class FollowUp extends Model
         'date',
         'type',
         'notes',
+        'dismissable',
     ];
 
     public static $types = ['call', 'email', 'meeting', 'chat'];

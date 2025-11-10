@@ -75,13 +75,34 @@ class CustomerPersonaController extends Controller
 }
 
 
-  public function updateMultiple(Request $request, $id)
-{
-    $persona = Persona::findOrFail($id);
-    $persona->update($request->all());
+ public function updateMultiple(Request $request, $id)
+    {
+        $persona = CustomerPersona::find($id);
 
-    return response()->json(['success' => true]);
-}
+        if (!$persona) {
+            return response()->json(['success' => false, 'message' => 'Persona not found.'], 404);
+        }
+
+        $data = $request->all();
+
+        foreach ($data as $field => $value) {
+            if (in_array($field, [
+                'date_of_birth',
+                'gender',
+                'education_level',
+                'income_level',
+                'key_interest',
+                'pain_point',
+                'notes'
+            ])) {
+                $persona->$field = $value;
+            }
+        }
+
+        $persona->save();
+
+        return response()->json(['success' => true, 'message' => 'Persona updated successfully.']);
+    }
 
 
 }

@@ -176,7 +176,7 @@
     <div class="stats-container">
       @foreach($leadByCategory as $category)
         <div class="stat-card"
-             onclick="window.location='{{ route('leads.byCategory', ['category' => $category->category_name]) }}'">
+             onclick="window.location='{{ route('leads.byCategory', ['id' => $category->category_id]) }}'">
           <div class="inner">
             <h3>{{ $category->total }}</h3>
             <p>{{ $category->category_name }}</p>
@@ -190,7 +190,7 @@
       @endforeach
 
       <div class="stat-card"
-           onclick="window.location='{{ route('leads.index') }}'">
+           onclick="window.location='{{ route('leads.byCategory', ['id' => $category->category_id]) }}'">
         <div class="inner">
           <h3>{{ $totalLeads }}</h3>
           <p>Total Leads</p>

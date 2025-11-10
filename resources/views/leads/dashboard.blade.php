@@ -292,7 +292,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     const canvas = document.getElementById('canvas_for_notifications');
     const loadingMsg = document.getElementById('loading_msg');
 
-    const response2 = await fetch('/api/get_appointment')
+    // const response2 = await fetch('/api/get_appointment')
+    const response2 = await fetch('/api/get_appointment2',{
+        method: 'post',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+        },
+        body: JSON.stringify({
+            user_id: user_id
+        })
+    })
     const data2 = await response2.json()
     console.log(data2.length)
     // Tampilkan modal
@@ -302,7 +312,18 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 
     try {
-        const response = await fetch('/api/get_appointment');
+        // const response = await fetch('/api/get_appointment');
+        const response = await fetch('/api/get_appointment2',{
+        method: 'post',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+        },
+        body: JSON.stringify({
+            user_id: user_id
+        })
+    })
+
         const data = await response.json();
 
         // Bersihkan loading spinner
@@ -331,9 +352,15 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <div class="card mb-3 border-0 shadow-sm rounded-4 reminder-card" id="reminder-${item.id}">
                     <div class="card-body">
                         <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-between mb-2 gap-2">
-                            <span>
-                                <p class="fs-5 fw-bold text-danger"><i class="fas fa-user-alt"></i> ${item.lead.crm.name}</p>
-                            </span>
+
+                            <div>
+                                <span>
+                                    <p class="fs-5 fw-bold text-danger"><i class="fas fa-user-alt"></i> ${item.lead.crm.name}</p>
+                                </span>
+                                <span>
+                                    <p class="fs-6"> ${item.lead.crm.category.name}</p>
+                                </span>
+                            </div>
                             <div>
                             <span class="badge bg-danger-subtle text-danger border border-danger px-4 py-2 fs-6 rounded-pill">
                                 <i class="bi bi-calendar-event me-2"></i>
@@ -374,13 +401,24 @@ async function dismiss(id){
 }
 
 async function dismissAll() {
+
     const reminders = document.querySelectorAll('.reminder-card')
     reminders.forEach(element => {
         id = element.getAttribute('id')
         console.log(id)
         element.remove()
     });
-    const response = await fetch('/api/dismiss_all_appointment')
+    // const response = await fetch('/api/dismiss_all_appointment')
+    const response = await fetch('/api/dismiss_all_appointment2',{
+        method: 'post',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+        },
+        body: JSON.stringify({
+            user_id: user_id
+        })
+    })
     const data = await response.json()
     console.log(data)
     // console.log(reminders)

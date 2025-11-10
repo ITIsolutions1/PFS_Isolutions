@@ -108,29 +108,59 @@ class FollowUpController extends Controller
                          ->with('success', 'Follow-up successfully deleted.');
     }
 
-    public function get_appointment(){
-        // $reminders = FollowUp::where('type', 'appointment')->with('lead')->get();
-        // return "test api";
-        $snoozed_until = User::findOrFail(10);
+    // public function get_appointment(){
 
-        $now = Carbon::now();
-        $show = $snoozed_until > $now ? 'yes' : 'no' ;
+    //     $reminders = FollowUp::where('type', 'appointment')
+    //     ->whereNotNull('date')
+    //     ->whereNull('dismissable')
+    //     ->orWhere('dismissable', '!=', 'dismissed')                // pastikan kolom date tidak kosong/null
+    //     ->where('date', '>', Carbon::now())   // hanya yang tanggalnya di masa depan
+    //     ->with('lead.crm.category')
+    //     ->orderBy('date', 'asc')              // urutkan dari yang paling dekat
+    //     ->get();
 
+    //     return $reminders;
+    // }
+
+     public function get_appointment2(Request $request)
+{
+    // 1️⃣ Ambil user dan semua kategori miliknya
+    $user = User::where('id', $request->user_id)->with('categories')->firstOrFail();
+
+    // 2️⃣ Ambil nama kategori dalam bentuk array
+    $array_categories = $user->categories->pluck('name')->toArray();
+
+    if($user->role == 'admin'){
         $reminders = FollowUp::where('type', 'appointment')
+            ->whereNotNull('date')
+            ->whereNull('dismissable')
+            ->orWhere('dismissable', '!=', 'dismissed')                // pastikan kolom date tidak kosong/null
+            ->where('date', '>', Carbon::now())   // hanya yang tanggalnya di masa depan
+            ->with('lead.crm.category')
+            ->orderBy('date', 'asc')              // urutkan dari yang paling dekat
+            ->get();
+
+            return $reminders;
+    }
+
+    // 3️⃣ Ambil semua follow-up yang category CRM-nya termasuk kategori user
+    $reminders = FollowUp::where('type', 'appointment')
         ->whereNotNull('date')
-        ->whereNull('dismissable')
-        ->orWhere('dismissable', '!=', 'dismissed')                // pastikan kolom date tidak kosong/null
-        ->where('date', '>', Carbon::now())   // hanya yang tanggalnya di masa depan
-        ->with('lead.crm')
-        ->orderBy('date', 'asc')              // urutkan dari yang paling dekat
+        ->where(function ($query) {
+            $query->whereNull('dismissable')
+                  ->orWhere('dismissable', '!=', 'dismissed');
+        })
+        ->where('date', '>', now())
+        ->whereHas('lead.crm.category', function ($query) use ($array_categories) {
+            $query->whereIn('name', $array_categories);
+        })
+        ->with('lead.crm.category') // biar data relasi ikut di-load
+        ->orderBy('date', 'asc')
         ->get();
 
         return $reminders;
-        // return [
-        //     'snoozed_until' => $show,
-        //     'reminders' => $reminders
-        // ];
-    }
+}
+
 
     public function dismiss_appointment($id){
         try{
@@ -146,11 +176,51 @@ class FollowUpController extends Controller
 
     }
 
-    public function dismiss_all_appointment(){
+    // public function dismiss_all_appointment(){
+
+    //     try{
+
+    //         $reminders = FollowUp::where('type', 'appointment')->whereNull('dismissable')->get();
+    //         foreach($reminders as $reminder){
+    //             $reminder->update(['dismissable' => 'dismissed']);
+    //         }
+    //         return response()->json(['status' => 'success', 'message' => 'All Appointment dismissed']);
+
+    //     }catch(\Exception $e){
+    //         return response()->json(['status' => 'error', 'message' => 'ERROR']);
+    //     }
+    // }
+
+    public function dismiss_all_appointment2(Request $request){
 
         try{
 
-            $reminders = FollowUp::where('type', 'appointment')->whereNull('dismissable')->get();
+            $user = User::where('id', $request->user_id)->with('categories')->firstOrFail();
+            // 2️⃣ Ambil nama kategori dalam bentuk array
+            $array_categories = $user->categories->pluck('name')->toArray();
+
+            if($user->role == 'admin'){
+                $reminders = FollowUp::where('type', 'appointment')->whereNull('dismissable')->get();
+                foreach($reminders as $reminder){
+                    $reminder->update(['dismissable' => 'dismissed']);
+                }
+                return response()->json(['status' => 'success', 'message' => 'All Appointment dismissed']);
+            }
+
+           $reminders = FollowUp::where('type', 'appointment')
+                ->whereNotNull('date')
+                ->where(function ($query) {
+                    $query->whereNull('dismissable')
+                        ->orWhere('dismissable', '!=', 'dismissed');
+                })
+                ->where('date', '>', now())
+                ->whereHas('lead.crm.category', function ($query) use ($array_categories) {
+                    $query->whereIn('name', $array_categories);
+                })
+                ->with('lead.crm.category') // biar data relasi ikut di-load
+                ->orderBy('date', 'asc')
+                ->get();
+
             foreach($reminders as $reminder){
                 $reminder->update(['dismissable' => 'dismissed']);
             }

@@ -7,10 +7,10 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\CrmController;
 use App\Http\Controllers\CustomerPersonaController;
-use App\Http\Controllers\LeadController;
+use App\Http\Controllers\LeadController;    
 use App\Http\Controllers\FollowUpController;
 use App\Http\Controllers\CategoryController;
-use App\Http\Controllers\RfpController;
+use App\Http\Controllers\RfpController; 
 use App\Http\Controllers\BroadcastController;
 use App\Http\Controllers\ProposalController;
 
@@ -72,7 +72,7 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::post('admin/crm/store', [CrmController::class, 'store'])->name('crm.store');
     Route::get('admin/crm/{id}/edit', [CrmController::class, 'edit'])->name('crm.edit');
     Route::put('admin/crm/{id}', [CrmController::class, 'update'])->name('crm.update');
-    Route::delete('admin/crm/{id}', [CrmController::class, 'destroy'])->name('crm.destroy');
+    Route::delete('admin/crm/{id}', [CrmController::class, 'destroy'])->name('crm.destroy');   
     Route::get('admin/crm/{id}', [CrmController::class, 'show'])->name('crm.show');
      Route::put('/admin/crm/{id}/update-multiple', [CrmController::class, 'updateMultiple'])->name('crm.updateMultiple');
 
@@ -80,12 +80,13 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::put('/crm/{crm}/{field}', [CrmController::class, 'updateField'])->name('crm.updateField');
     // Untuk update field persona
     Route::put('/persona/{persona}/{field}', [CustomerPersonaController::class, 'updateField'])->name('persona.updateField');
-
+   
 
 
     //C=USTOMER PERSONA ROUTES
     Route::resource('personas', CustomerPersonaController::class);
-    Route::put('/persona/{id}/update-multiple', [PersonaController::class, 'updateMultiple']);
+    Route::put('/personas/{id}/update-multiple', [PersonaController::class, 'updateMultiple']);
+    Route::put('/followups/update-multiple', [FollowUpController::class, 'updateMultiple'])->name('followups.updateMultiple');
 
 
 
@@ -103,8 +104,8 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::get('{id}/edit', [FollowUpController::class, 'edit'])->name('followups.edit');
     Route::put('{id}', [FollowUpController::class, 'update'])->name('followups.update');
     Route::delete('{id}', [FollowUpController::class, 'destroy'])->name('followups.destroy');
+    
     });
-
 
 
     Route::post('crms/add-lead/{crm}', [LeadController::class, 'createFromCrm'])->name('leads.createFromCrm');
@@ -112,7 +113,7 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::get('admin/leads/{lead}', [LeadController::class, 'show'])->name('leads.show');
 
     Route::resource('categories', CategoryController::class);
-
+   
 
     // Broadcast Email Routes
     Route::get('/broadcastMail', [BroadcastController::class, 'create'])->name('broadcast.create');
@@ -139,8 +140,8 @@ Route::middleware(['auth', 'admin'])->group(function () {
 Route::middleware(['auth'])->group(function () {
      route::resource('leads', LeadController::class);
    route::get('/leads-dashboard', [LeadController::class, 'dashboard'])->name('leads.dashboard');
-   // Menampilkan leads berdasarkan kategori
-    Route::get('/leads/category/{category}', [LeadController::class, 'byCategory'])->name('leads.byCategory');
+   
+    Route::get('/leads/category/{id}', [LeadController::class, 'byCategory'])->name('leads.byCategory');
 
     Route::prefix('admin/leads/{lead_id}/followups')->group(function () {
     Route::get('/', [FollowUpController::class, 'index'])->name('followups.index');
@@ -148,7 +149,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('{id}/edit', [FollowUpController::class, 'edit'])->name('followups.edit');
     Route::put('{id}', [FollowUpController::class, 'update'])->name('followups.update');
     Route::delete('{id}', [FollowUpController::class, 'destroy'])->name('followups.destroy');
-
+    
     });
 
       Route::get('admin/crm', [CrmController::class, 'index'])->name('crm.index');
@@ -156,7 +157,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('admin/crm/store', [CrmController::class, 'store'])->name('crm.store');
     Route::get('admin/crm/{id}/edit', [CrmController::class, 'edit'])->name('crm.edit');
     Route::put('admin/crm/{id}', [CrmController::class, 'update'])->name('crm.update');
-    Route::delete('admin/crm/{id}', [CrmController::class, 'destroy'])->name('crm.destroy');
+    Route::delete('admin/crm/{id}', [CrmController::class, 'destroy'])->name('crm.destroy');   
     Route::get('admin/crm/{id}', [CrmController::class, 'show'])->name('crm.show');
      Route::put('/admin/crm/{id}/update-multiple', [CrmController::class, 'updateMultiple'])->name('crm.updateMultiple');
 
@@ -164,7 +165,9 @@ Route::middleware(['auth'])->group(function () {
     Route::put('/crm/{crm}/{field}', [CrmController::class, 'updateField'])->name('crm.updateField');
     // Untuk update field persona
     Route::put('/persona/{persona}/{field}', [CustomerPersonaController::class, 'updateField'])->name('persona.updateField');
-
+       Route::post('crms/add-lead/{crm}', [LeadController::class, 'createFromCrm'])->name('leads.createFromCrm');
+    Route::get('/leads/status/{status}', [LeadController::class, 'leadByStatus'])->name('leads.byStatus');
+    Route::get('admin/leads/{lead}', [LeadController::class, 'show'])->name('leads.show');
 
 
     //C=USTOMER PERSONA ROUTES
@@ -174,7 +177,7 @@ Route::middleware(['auth'])->group(function () {
 
 
 
-
+    
 });
 
 

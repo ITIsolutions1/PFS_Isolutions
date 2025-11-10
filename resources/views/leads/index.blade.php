@@ -6,201 +6,207 @@
 
   <div class="container py-4">
 
-    {{-- Alert Section --}}
-    @if(session('success'))
-      <div class="alert alert-success alert-dismissible fade show" role="alert">
-        {{ session('success') }}
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-      </div>
-    @endif
-
-    @if(session('warning'))
-      <div class="alert alert-warning alert-dismissible fade show" role="alert">
-        {{ session('warning') }}
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-      </div>
-    @endif
+    {{-- ALERT SECTION --}}
+    @foreach (['success', 'warning'] as $type)
+      @if(session($type))
+        <div class="alert alert-{{ $type }} alert-dismissible fade show shadow-sm" role="alert">
+          {{ session($type) }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+      @endif
+    @endforeach
 
     {{-- HEADER --}}
-    <div class="mt-3">
-      <a href="{{ route('leads.dashboard') }}" class="btn btn-outline-danger">
-        <i class="bi bi-arrow-left"></i> Back
-      </a>
-    </div>
-
-    <div class="d-flex justify-content-between align-items-center mt-5 mb-4 flex-wrap gap-2">
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3 mt-5">
       <div>
-        <h2 class="fw-bold text-danger mb-0">
-          <i class="bi bi-people-fill me-2"></i>
-          Leads List - {{ $category ?? 'All Categories' }}
+        <h2 class="fw-bold text-danger mb-1">
+          <i class="bi bi-people-fill me-2"></i> Leads List
         </h2>
-        <p class="text-muted small mb-0">Monitor and manage all your potential client projects.</p>
+        <p class="text-muted small mb-0">
+          @if(!empty($selectedCategory))
+            Showing leads in <strong>{{ $selectedCategory->name }}</strong> category.
+          @else
+            Monitor and manage all your potential client projects.
+          @endif
+        </p>
       </div>
-
-      <a href="{{ route('leads.create') }}" class="btn btn-danger shadow-sm">
-        <i class="bi bi-plus-circle me-1"></i> Add Lead
-      </a>
+      <div class="d-flex gap-2">
+        <a href="{{ route('leads.dashboard') }}" class="btn btn-outline-danger btn-sm">
+          <i class="bi bi-arrow-left"></i> Back
+        </a>
+        <a href="{{ route('leads.create') }}" class="btn btn-danger btn-sm shadow-sm">
+          <i class="bi bi-plus-circle me-1"></i> Add Lead
+        </a>
+      </div>
     </div>
 
-    {{-- TABLE WRAPPER --}}
+    {{-- FILTER SECTION --}}
+    <div class="card border-0 shadow-sm rounded-4 mb-4">
+      <div class="card-body p-3">
+        <form method="GET"
+              action="{{ isset($selectedCategory)
+                  ? route('leads.byCategory', ['id' => $selectedCategory->id])
+                  : route('leads.index') }}">
+
+          <div class="row g-2 align-items-end">
+
+            {{-- Search by CRM Name --}}
+            <div class="{{ empty($selectedCategory) ? 'col-md-5' : 'col-md-8' }}">
+              <label for="search_name" class="form-label small fw-semibold text-muted mb-1">
+                Search by CRM Name
+              </label>
+              <input
+                type="text"
+                name="search_name"
+                id="search_name"
+                class="form-control form-control-sm"
+                placeholder="Enter CRM name..."
+                value="{{ request('search_name') }}"
+              >
+            </div>
+
+            {{-- Filter by Category (hanya muncul di halaman semua leads) --}}
+            @if(empty($selectedCategory))
+              <div class="col-md-3">
+                <label for="category_id" class="form-label small fw-semibold text-muted mb-1">
+                  Filter by Category
+                </label>
+                <select name="category_id" id="category_id" class="form-select form-select-sm">
+                  <option value="">All Categories</option>
+                  @foreach($categories as $cat)
+                    <option value="{{ $cat->id }}" {{ request('category_id') == $cat->id ? 'selected' : '' }}>
+                      {{ $cat->name }}
+                    </option>
+                  @endforeach
+                </select>
+              </div>
+            @endif
+
+            {{-- Buttons --}}
+            <div class="{{ empty($selectedCategory) ? 'col-md-4' : 'col-md-4' }}">
+              <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-danger btn-sm px-3">
+                  <i class="bi bi-search me-1"></i> Apply
+                </button>
+
+                <a href="{{ isset($selectedCategory)
+                    ? route('leads.byCategory', ['id' => $selectedCategory->id])
+                    : route('leads.index') }}"
+                   class="btn btn-outline-secondary btn-sm px-3">
+                  <i class="bi bi-arrow-repeat me-1"></i> Reset
+                </a>
+              </div>
+            </div>
+
+          </div>
+        </form>
+      </div>
+    </div>
+
+    {{-- TABLE --}}
     <div class="card shadow-sm border-0 rounded-4 overflow-hidden">
-      <div class="card-body p-0">
-
-        {{-- Responsive Scroll Wrapper --}}
-        <div class="table-responsive" style="overflow-x: auto;">
-          <table class="table table-hover align-middle mb-0 text-nowrap">
-            <thead class="bg-danger text-white">
-              <tr>
-                <th class="text-center">No</th>
-                <th>
-                  Created at
-                  <a href="{{ request()->fullUrlWithQuery(['sort' => 'created_at_asc']) }}" class="text-white small text-decoration-none">&#9650;</a>
-                  <a href="{{ request()->fullUrlWithQuery(['sort' => 'created_at_desc']) }}" class="text-white small text-decoration-none">&#9660;</a>
-                </th>
-                <th>
-                  CRM Name
-                  <a href="{{ request()->fullUrlWithQuery(['sort' => 'name_asc']) }}" class="text-white small text-decoration-none">&#9650;</a>
-                  <a href="{{ request()->fullUrlWithQuery(['sort' => 'name_desc']) }}" class="text-white small text-decoration-none">&#9660;</a>
-                </th>
-                <th>
-                  Category
-                  <a href="{{ request()->fullUrlWithQuery(['sort' => 'category_asc']) }}" class="text-white small text-decoration-none">&#9650;</a>
-                  <a href="{{ request()->fullUrlWithQuery(['sort' => 'category_desc']) }}" class="text-white small text-decoration-none">&#9660;</a>
-                </th>
-                <th>
-                  Status
-                  <a href="{{ request()->fullUrlWithQuery(['sort' => 'status_asc']) }}" class="text-white small text-decoration-none">&#9650;</a>
-                  <a href="{{ request()->fullUrlWithQuery(['sort' => 'status_desc']) }}" class="text-white small text-decoration-none">&#9660;</a>
-                </th>
-                <th>Follow Ups</th>
-                <th>Last Contact
-                  <a href="{{ request()->fullUrlWithQuery(['sort' => 'lastcontact_asc']) }}" class="text-white small text-decoration-none">&#9650;</a>
-                  <a href="{{ request()->fullUrlWithQuery(['sort' => 'lastcontact_desc']) }}" class="text-white small text-decoration-none">&#9660;</a>
-                </th>
-                <th class="text-center">Action</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              @forelse($leads as $lead)
-                <tr>
-                  <td class="text-center fw-semibold">
-                    {{ ($leads->currentPage() - 1) * $leads->perPage() + $loop->iteration }}
-                  </td>
-
-                  <td>{{ $lead->created_at ? \Carbon\Carbon::parse($lead->created_at)->translatedFormat('d M Y, H:i') : '-' }}</td>
-
-                  <td class="fw-semibold">
-                    <a href="{{ route('leads.show', $lead->id) }}" class="text-decoration-none text-dark">
-                      {{ $lead->crm->name }}
-                    </a>
-                  </td>
-
-                  <td>{{ $lead->crm->category->name ?? '-' }}</td>
-
-                  <td>
-                    @php
-                      $badgeColors = [
-                        'new' => 'secondary',
-                        'contacted' => 'info',
-                        'qualified' => 'success',
-                        'unqualified' => 'danger',
-                      ];
-                      $icons = [
-                        'new' => 'bi-lightning-charge',
-                        'contacted' => 'bi-telephone',
-                        'qualified' => 'bi-check-circle',
-                        'unqualified' => 'bi-x-circle',
-                      ];
-                    @endphp
-                    <span class="badge bg-{{ $badgeColors[$lead->status] ?? 'secondary' }} px-3 py-2 rounded-pill shadow-sm">
-                      <i class="bi {{ $icons[$lead->status] ?? 'bi-circle' }} me-1"></i>
-                      {{ ucfirst($lead->status) }}
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0 text-nowrap">
+          <thead class="bg-danger text-white">
+            <tr>
+              <th class="text-center">No</th>
+              <th>
+                Created At
+                <a href="{{ request()->fullUrlWithQuery(['sort' => 'created_at_asc']) }}" class="text-white small">&#9650;</a>
+                <a href="{{ request()->fullUrlWithQuery(['sort' => 'created_at_desc']) }}" class="text-white small">&#9660;</a>
+              </th>
+              <th>
+                CRM Name
+                <a href="{{ request()->fullUrlWithQuery(['sort' => 'name_asc']) }}" class="text-white small">&#9650;</a>
+                <a href="{{ request()->fullUrlWithQuery(['sort' => 'name_desc']) }}" class="text-white small">&#9660;</a>
+              </th>
+              <th>Category</th>
+              <th>Status</th>
+              <th>Follow Ups</th>
+              <th>Last Contact</th>
+              <th class="text-center">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            @forelse($leads as $lead)
+              <tr class="hover-row">
+                <td class="text-center fw-semibold">
+                  {{ ($leads->currentPage() - 1) * $leads->perPage() + $loop->iteration }}
+                </td>
+                <td>{{ $lead->created_at ? \Carbon\Carbon::parse($lead->created_at)->translatedFormat('d M Y, H:i') : '-' }}</td>
+                <td class="fw-semibold">
+                  <a href="{{ route('leads.show', $lead->id) }}" class="text-decoration-none text-dark">
+                    {{ $lead->crm->name }} <br><span class="text-muted">
+                      {{ $lead->crm->company ? '('.$lead->crm->company.')' : '' }}
                     </span>
-                  </td>
-
-                  <td>
-                    <a href="{{ route('followups.index', $lead->id) }}" class="text-decoration-none text-dark">
-                      <i class="bi bi-chat-dots-fill text-danger me-1"></i>
-                      {{ $lead->followUps->count() }} x
+                  </a>
+                </td>
+                <td>{{ $lead->crm->category->name ?? '-' }}</td>
+                <td>
+                  @php
+                    $badgeColors = [
+                      'new' => 'secondary',
+                      'contacted' => 'info',
+                      'qualified' => 'success',
+                      'unqualified' => 'danger',
+                    ];
+                    $icons = [
+                      'new' => 'bi-lightning-charge',
+                      'contacted' => 'bi-telephone',
+                      'qualified' => 'bi-check-circle',
+                      'unqualified' => 'bi-x-circle',
+                    ];
+                  @endphp
+                  <span class="badge bg-{{ $badgeColors[$lead->status] ?? 'secondary' }} px-3 py-2 rounded-pill shadow-sm">
+                    <i class="bi {{ $icons[$lead->status] ?? 'bi-circle' }} me-1"></i>
+                    {{ ucfirst($lead->status) }}
+                  </span>
+                </td>
+                <td>
+                  <a href="{{ route('followups.index', $lead->id) }}" class="text-decoration-none text-dark">
+                    <i class="bi bi-chat-dots-fill text-danger me-1"></i>
+                    {{ $lead->followUps->count() }} x
+                  </a>
+                </td>
+                <td>
+                  @if($lead->followUps->count())
+                    @php $latestFollowUp = $lead->followUps->sortByDesc('date')->first(); @endphp
+                    {{ \Carbon\Carbon::parse($latestFollowUp->date)->format('d M Y') }}
+                  @else
+                    <span class="text-muted">Not Yet</span>
+                  @endif
+                </td>
+                <td class="text-center">
+                  <div class="d-flex justify-content-center gap-2 flex-wrap">
+                    <a href="{{ route('followups.index', $lead->id) }}" class="btn btn-sm btn-outline-danger rounded-circle" title="Follow Ups">
+                      <i class="bi bi-chat-dots-fill"></i>
                     </a>
-                  </td>
-
-                  <td>
-                    @if($lead->followUps->count())
-                      @php
-                        $sortedFollowUps = $lead->followUps->sortByDesc('date');
-                        $latestFollowUp = $sortedFollowUps->first();
-                      @endphp
-                      <div class="dropdown">
-                        <a href="#" class="text-dark fw-semibold dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-                          {{ \Carbon\Carbon::parse($latestFollowUp->date)->format('d M Y') }}
-                        </a>
-                        <small class="text-muted d-block">
-                          {{ $latestFollowUp->created_at->diffForHumans() }}
-                        </small>
-
-                        <ul class="dropdown-menu shadow border-0 rounded-3 p-3" style="min-width: 280px; max-height: 300px; overflow-y: auto;">
-                          <li class="fw-semibold text-secondary mb-2 border-bottom pb-2">Follow-up History</li>
-                          @foreach($sortedFollowUps as $followUp)
-                            <li class="mb-2">
-                              <div class="d-flex justify-content-between align-items-center">
-                                <span class="fw-semibold text-dark small">{{ \Carbon\Carbon::parse($followUp->date)->format('d M Y') }}</span>
-                                <span class="text-muted small">{{ $followUp->created_at->diffForHumans() }}</span>
-                              </div>
-                              @if($followUp->type)
-                                <div class="text-primary small mt-1">
-                                  <i class="@if($followUp->type == 'Call') bi-telephone @elseif($followUp->type == 'Email') bi-envelope @elseif($followUp->type == 'Meeting') bi-people @elseif($followUp->type == 'WhatsApp') bi-whatsapp @else bi-chat-dots @endif me-1"></i>
-                                  <strong>{{ ucfirst($followUp->type) }}</strong>
-                                </div>
-                              @endif
-                              @if($followUp->notes)
-                                <div class="text-muted small mt-1">
-                                  <i class="bi bi-chat-left-text me-1"></i>{{ $followUp->notes }}
-                                </div>
-                              @endif
-                              @if(!$loop->last)
-                                <hr class="my-2">
-                              @endif
-                            </li>
-                          @endforeach
-                        </ul>
-                      </div>
-                    @else
-                      <span class="text-muted">Not Yet</span>
-                    @endif
-                  </td>
-
-                  <td class="text-center">
-                    <div class="d-flex justify-content-center gap-2 flex-wrap">
-                      <a href="{{ route('followups.index', $lead->id) }}" class="btn btn-sm btn-outline-danger rounded-circle" title="View Follow Ups">
-                        <i class="bi bi-chat-dots-fill"></i>
-                      </a>
-                      <a href="{{ route('leads.edit', $lead) }}" class="btn btn-sm btn-outline-warning rounded-circle" title="Edit Lead">
+                    <a href="{{ route('leads.edit', ['lead' => $lead->id] + (isset($selectedCategoryId) ? ['category_id' => $selectedCategoryId] : [])) }}"
+                      class="btn btn-sm btn-outline-warning rounded-circle"
+                      title="Edit">
                         <i class="bi bi-pencil-square"></i>
-                      </a>
-                      <form action="{{ route('leads.destroy', $lead) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this lead?')">
-                        @csrf
-                        @method('DELETE')
-                        <button type="submit" class="btn btn-sm btn-outline-danger rounded-circle" title="Delete Lead">
-                          <i class="bi bi-trash"></i>
-                        </button>
-                      </form>
-                    </div>
-                  </td>
-                </tr>
-              @empty
-                <tr>
-                  <td colspan="8" class="text-center text-muted py-5">
-                    <i class="bi bi-inbox fs-1 d-block mb-3"></i>
-                    Belum ada leads yang tercatat.
-                  </td>
-                </tr>
-              @endforelse
-            </tbody>
-          </table>
-        </div>
+                    </a>
 
+                    <form action="{{ route('leads.destroy', $lead) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete this lead?')">
+                      @csrf
+                      @method('DELETE')
+                      <button type="submit" class="btn btn-sm btn-outline-danger rounded-circle" title="Delete">
+                        <i class="bi bi-trash"></i>
+                      </button>
+                    </form>
+                  </div>
+                </td>
+              </tr>
+            @empty
+              <tr>
+                <td colspan="8" class="text-center text-muted py-5">
+                  <i class="bi bi-inbox fs-1 d-block mb-3"></i>
+                  No leads found.
+                </td>
+              </tr>
+            @endforelse
+          </tbody>
+        </table>
       </div>
     </div>
 
@@ -211,49 +217,15 @@
   </div>
 
   <style>
-    .hover-row:hover {
-      background-color: #fff5f5;
-      transition: 0.2s;
-    }
-    .btn.rounded-circle {
-      width: 36px;
-      height: 36px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .dropdown-menu::-webkit-scrollbar {
-      width: 6px;
-    }
-    .dropdown-menu::-webkit-scrollbar-thumb {
-      background-color: rgba(0, 0, 0, 0.15);
-      border-radius: 10px;
-    }
-
-    /* Responsive Mobile View */
+    body { background-color: #fafafa; }
+    .hover-row:hover { background-color: #fff5f5 !important; transition: 0.2s ease-in-out; }
+    .btn.rounded-circle { width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; }
+    .form-label { font-size: 0.85rem; }
+    .form-control, .form-select { border-radius: 0.5rem; }
     @media (max-width: 768px) {
-      .table-responsive {
-        border: none !important;
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-        scrollbar-width: thin;
-      }
-      table.table th,
-      table.table td {
-        font-size: 13px;
-        white-space: nowrap;
-      }
-      .btn.rounded-circle {
-        width: 32px;
-        height: 32px;
-      }
-      h2.fw-bold {
-        font-size: 1.2rem;
-      }
-      .d-flex.justify-content-between {
-        flex-direction: column !important;
-        align-items: start !important;
-      }
+      .table th, .table td { font-size: 13px; white-space: nowrap; }
+      .btn.rounded-circle { width: 32px; height: 32px; }
+      h2.fw-bold { font-size: 1.25rem; }
     }
   </style>
 </x-app-layout>

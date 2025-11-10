@@ -63,23 +63,46 @@ public function dashboard()
 
 
 
-public function byCategory($category, Request $request)
+public function byCategory($id, Request $request)
 {
+    // Pastikan kategori valid
+    $selectedCategoryModel = Categories::findOrFail($id);
+
+    // Ambil semua kategori yang punya CRM & Leads
     $categories = Categories::whereIn('id', function ($query) {
         $query->select('category_id')
-              ->from('crm')
-              ->whereIn('id', function ($subQuery) {
-                  $subQuery->select('crm_id')->from('leads');
-              });
+            ->from('crm')
+            ->whereIn('id', function ($subQuery) {
+                $subQuery->select('crm_id')->from('leads');
+            });
     })->get();
 
-    $leadsQuery = Lead::with(['crm.category', 'assignedUser', 'followUps'])
-        ->whereHas('crm.category', function($q) use ($category) {
-            $q->where('name', $category);
-        });
-
+    // Ambil parameter filter tambahan
+    $searchName = $request->get('search_name');
+    $selectedCategoryId = $request->get('category_id');
     $sort = $request->get('sort', 'created_at_desc');
 
+    // Query utama leads berdasarkan kategori dari URL
+    $leadsQuery = Lead::with(['crm.category', 'assignedUser', 'followUps'])
+        ->whereHas('crm', function ($q) use ($id) {
+            $q->where('category_id', $id);
+        });
+
+    //  Filter by CRM Name
+    if (!empty($searchName)) {
+        $leadsQuery->whereHas('crm', function ($q) use ($searchName) {
+            $q->where('name', 'like', '%' . $searchName . '%');
+        });
+    }
+
+    //  Filter tambahan (dropdown kategori lain)
+    if (!empty($selectedCategoryId)) {
+        $leadsQuery->whereHas('crm', function ($q) use ($selectedCategoryId) {
+            $q->where('category_id', $selectedCategoryId);
+        });
+    }
+
+    //  Sorting logic
     switch ($sort) {
         case 'created_at_asc':
             $leadsQuery->orderBy('created_at', 'asc');
@@ -117,17 +140,11 @@ public function byCategory($category, Request $request)
                 'desc'
             );
             break;
-        case 'category_asc':
-            $leadsQuery->orderBy('category', 'asc');
-            break;
-        case 'category_desc':
-           $leadsQuery->orderBy('category', 'desc');
-            break;
         case 'lastcontact_asc':
             $leadsQuery->orderBy(
                 FollowUp::select('date')
                     ->whereColumn('follow_ups.lead_id', 'leads.id')
-                    ->orderBy('date', 'asc')
+                    ->latest('date')
                     ->take(1),
                 'asc'
             );
@@ -136,7 +153,7 @@ public function byCategory($category, Request $request)
             $leadsQuery->orderBy(
                 FollowUp::select('date')
                     ->whereColumn('follow_ups.lead_id', 'leads.id')
-                    ->orderBy('date', 'desc')
+                    ->latest('date')
                     ->take(1),
                 'desc'
             );
@@ -146,12 +163,19 @@ public function byCategory($category, Request $request)
             break;
     }
 
+    // Pagination + keep query string
     $leads = $leadsQuery->paginate(20)->appends($request->query());
 
-    $selectedCategory = $category;
-
-    return view('leads.index', compact('categories', 'leads', 'selectedCategory', 'sort'));
+    return view('leads.index', [
+        'categories' => $categories,
+        'leads' => $leads,
+        'selectedCategory' => $selectedCategoryModel,
+        'sort' => $sort,
+        'searchName' => $searchName
+    ]);
 }
+
+
 
 
 
@@ -160,6 +184,7 @@ public function index(Request $request)
 {
     $user = auth()->user();
 
+    // Ambil kategori sesuai role
     if ($user->role === 'admin') {
         $categories = \App\Models\Categories::all();
     } else {
@@ -167,20 +192,33 @@ public function index(Request $request)
     }
 
     $categoryIds = $categories->pluck('id');
+
+    // Ambil input filter
     $selectedCategoryId = $request->get('category_id');
+    $searchName = $request->get('search_name'); 
     $sort = $request->get('sort', 'created_at_desc');
 
-    $leadsQuery = Lead::with(['crm.category', 'assignedUser', 'followUps'])
+    // Base query
+    $leadsQuery = \App\Models\Lead::with(['crm.category', 'assignedUser', 'followUps'])
         ->whereHas('crm', function ($q) use ($categoryIds) {
             $q->whereIn('category_id', $categoryIds);
         });
 
-    if ($selectedCategoryId && $categoryIds->contains($selectedCategoryId)) {
+    //  Filter by CRM Name
+    if (!empty($searchName)) {
+        $leadsQuery->whereHas('crm', function ($q) use ($searchName) {
+            $q->where('name', 'like', '%' . $searchName . '%');
+        });
+    }
+
+    //  Filter by Category (jika user pilih salah satu)
+    if (!empty($selectedCategoryId) && $categoryIds->contains($selectedCategoryId)) {
         $leadsQuery->whereHas('crm', function ($q) use ($selectedCategoryId) {
             $q->where('category_id', $selectedCategoryId);
         });
     }
 
+    //  Sorting logic
     switch ($sort) {
         case 'created_at_asc':
             $leadsQuery->orderBy('created_at', 'asc');
@@ -190,13 +228,13 @@ public function index(Request $request)
             break;
         case 'name_asc':
             $leadsQuery->orderBy(
-                Crm::select('name')->whereColumn('crm.id', 'leads.crm_id'),
+                \App\Models\Crm::select('name')->whereColumn('crm.id', 'leads.crm_id'),
                 'asc'
             );
             break;
         case 'name_desc':
             $leadsQuery->orderBy(
-                Crm::select('name')->whereColumn('crm.id', 'leads.crm_id'),
+                \App\Models\Crm::select('name')->whereColumn('crm.id', 'leads.crm_id'),
                 'desc'
             );
             break;
@@ -208,19 +246,19 @@ public function index(Request $request)
             break;
         case 'assigned_to_asc':
             $leadsQuery->orderBy(
-                User::select('name')->whereColumn('users.id', 'leads.assigned_to'),
+                \App\Models\User::select('name')->whereColumn('users.id', 'leads.assigned_to'),
                 'asc'
             );
             break;
         case 'assigned_to_desc':
             $leadsQuery->orderBy(
-                User::select('name')->whereColumn('users.id', 'leads.assigned_to'),
+                \App\Models\User::select('name')->whereColumn('users.id', 'leads.assigned_to'),
                 'desc'
             );
             break;
         case 'lastcontact_asc':
             $leadsQuery->orderBy(
-                FollowUp::select('date')
+                \App\Models\FollowUp::select('date')
                     ->whereColumn('follow_ups.lead_id', 'leads.id')
                     ->latest('date')
                     ->take(1),
@@ -229,7 +267,7 @@ public function index(Request $request)
             break;
         case 'lastcontact_desc':
             $leadsQuery->orderBy(
-                FollowUp::select('date')
+                \App\Models\FollowUp::select('date')
                     ->whereColumn('follow_ups.lead_id', 'leads.id')
                     ->latest('date')
                     ->take(1),
@@ -241,10 +279,13 @@ public function index(Request $request)
             break;
     }
 
+    // Pagination + query parameters tetap dipertahankan
     $leads = $leadsQuery->paginate(20)->appends($request->query());
 
-    return view('leads.index', compact('categories', 'leads', 'selectedCategoryId', 'sort'));
+    // Kirim semua variabel ke view
+    return view('leads.index', compact('categories', 'leads', 'selectedCategoryId', 'sort', 'searchName'));
 }
+
 
 
 
@@ -299,13 +340,18 @@ public function create()
         return redirect()->route('leads.index')->with('success', 'Lead berhasil ditambahkan.');
     }
 
-    public function edit(Lead $lead)
-    {
-         $categories = Categories::orderBy('name')->get();
-        $crms = Crm::all();
-        $users = User::all();
-        return view('leads.edit', compact('lead', 'crms', 'users', 'categories'));
-    }
+ public function edit(Lead $lead, Request $request)
+{
+    $categories = Categories::orderBy('name')->get();
+    $crms = Crm::all();
+    $users = User::all();
+
+    // Simpan URL asal (halaman sebelumnya)
+    $previousUrl = url()->previous();
+
+    return view('leads.edit', compact('lead', 'crms', 'users', 'categories', 'previousUrl'));
+}
+
 
 
 
@@ -313,36 +359,24 @@ public function update(Request $request, Lead $lead)
 {
     $request->validate([
         'crm_id'      => 'required|exists:crm,id',
-        // 'status'      => 'required|string',
         'assigned_to' => 'nullable|exists:users,id',
         'notes'       => 'nullable|string',
-        // 'category'    => 'required|string',
     ]);
 
-    // Simpan status dan kategori lama
-    // $oldStatus = $lead->status;
-    // $oldCategory = $lead->category;
-
     // Update lead
-    $lead->update($request->only('crm_id', 'assigned_to', 'notes', ));
+    $lead->update($request->only('crm_id', 'assigned_to', 'notes'));
 
-    // Update juga kategori di CRM terkait
+    // Update kategori CRM jika ada
     if ($lead->crm) {
         $lead->crm->update(['category_id' => $request->category_id]);
     }
 
-    // Jika status berubah menjadi 'qualified', buat RFP otomatis
-    if ($request->status === 'qualified' && $oldStatus !== 'qualified') {
-        Rfp::create([
-            'lead_id'     => $lead->id,
-            'title'       => 'RFP for ' . ($lead->crm->company_name ?? 'Lead #' . $lead->id),
-            'description' => 'Auto-generated from qualified lead.',
-            'status'      => 'draft',
-        ]);
-    }
+    // Redirect ke halaman sebelumnya jika ada, kalau tidak ke leads.index
+    $redirectUrl = $request->input('redirect_to', route('leads.index'));
 
-    return redirect()->route('leads.index')->with('success', 'Lead & CRM berhasil diperbarui.');
+    return redirect($redirectUrl)->with('success', 'Lead & CRM berhasil diperbarui.');
 }
+
 
 
 
@@ -354,12 +388,13 @@ public function update(Request $request, Lead $lead)
 
     public function show(Lead $lead)
     {
+          $previousUrl = url()->previous();
         // Load semua relasi yang dibutuhkan untuk lead ini
         $lead->load('crm', 'followUps', 'persona', 'assignedUser');
 
         $types = FollowUp::$types;
 
-        return view('leads.show', compact('lead', 'types'));
+        return view('leads.show', compact('lead', 'types', 'previousUrl'));
     }
 
 

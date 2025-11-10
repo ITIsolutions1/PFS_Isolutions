@@ -14,9 +14,11 @@ class FollowUpController extends Controller
 {
    public function index($lead_id)
 {
+    $previousUrl = url()->previous();
+
     $lead = Lead::with('followUps')->findOrFail($lead_id);
     $types = FollowUp::$types; // ambil dari model
-    return view('followups.index', compact('lead', 'types'));
+    return view('followups.index', compact('lead', 'types', 'previousUrl'));
 }
 
 

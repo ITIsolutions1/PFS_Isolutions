@@ -13,9 +13,11 @@
   {{-- HEADER --}}
 
    <div class="mt-3">
-      <a href="{{ route('leads.index') }}" class="btn btn-outline-danger">
-        <i class="bi bi-arrow-left"></i> Back
-      </a>
+    <div class="mt-3">
+        <a href="{{ $previousUrl ?? route('leads.index') }}" class="btn btn-outline-danger">
+            <i class="bi bi-arrow-left"></i> Back
+        </a>
+    </div>
     </div>
 
   <div class="d-flex justify-content-between align-items-center mb-4 mt-5">

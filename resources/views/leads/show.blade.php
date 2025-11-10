@@ -3,147 +3,82 @@
 
     {{-- Tombol kembali --}}
     <div class="mt-3">
-    <a href="{{ route('leads.index') }}" class="btn btn-outline-danger">
-        <i class="bi bi-arrow-left"></i> Back
-    </a>
+        <a href="{{ $previousUrl ?? route('leads.index') }}" class="btn btn-outline-danger">
+            <i class="bi bi-arrow-left"></i> Back
+        </a>
     </div>
-
 
     {{-- Judul --}}
     <h3 class="fw-bold text-danger mb-4 mt-5">
         <i class="bi bi-people-fill me-2"></i> Detail Lead: {{ $lead->crm->name ?? '-' }}
     </h3>
 
-    {{--  Card Utama --}}
     <div class="card shadow-sm rounded-4">
         <div class="card-body">
 
-            {{--  Tabs --}}
+            {{-- Tabs --}}
             <ul class="nav nav-tabs mb-3" id="leadTab" role="tablist">
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link active" id="contact-tab" data-bs-toggle="tab" data-bs-target="#contact" type="button" role="tab">
-                        Informasi Contact
-                    </button>
+                <li class="nav-item">
+                    <button class="nav-link active" id="contact-tab" data-bs-toggle="tab" data-bs-target="#contact" type="button">Informasi Contact</button>
                 </li>
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="persona-tab" data-bs-toggle="tab" data-bs-target="#persona" type="button" role="tab">
-                        Informasi Persona
-                    </button>
+                <li class="nav-item">
+                    <button class="nav-link" id="persona-tab" data-bs-toggle="tab" data-bs-target="#persona" type="button">Informasi Persona</button>
                 </li>
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="followup-tab" data-bs-toggle="tab" data-bs-target="#followup" type="button" role="tab">
-                        Follow Up Tracking
-                    </button>
+                <li class="nav-item">
+                    <button class="nav-link" id="followup-tab" data-bs-toggle="tab" data-bs-target="#followup" type="button">Follow Up Tracking</button>
                 </li>
             </ul>
 
-            {{-- 🔸 Tab Content --}}
+            {{-- Tab Content --}}
             <div class="tab-content" id="leadTabContent">
 
                 {{-- CONTACT TAB --}}
-                <div class="tab-pane fade show active" id="contact" role="tabpanel" aria-labelledby="contact-tab">
+                <div class="tab-pane fade show active" id="contact" role="tabpanel">
                     <div class="d-flex justify-content-end mb-3">
-                        <button id="editBtn" class="btn btn-warning btn-sm me-2">
-                            <i class="bi bi-pencil-square"></i> Edit
-                        </button>
-                        <button id="saveBtn" class="btn btn-success btn-sm d-none">
-                            <i class="bi bi-check2-circle"></i> Save
-                        </button>
-                        <button id="cancelBtn" class="btn btn-secondary btn-sm d-none">
-                            <i class="bi bi-x-circle"></i> Cancel
-                        </button>
+                        <button id="editBtn" class="btn btn-warning btn-sm me-2"><i class="bi bi-pencil-square"></i> Edit</button>
+                        <button id="saveBtn" class="btn btn-success btn-sm d-none"><i class="bi bi-check2-circle"></i> Save</button>
+                        <button id="cancelBtn" class="btn btn-secondary btn-sm d-none"><i class="bi bi-x-circle"></i> Cancel</button>
                     </div>
 
                     <ul class="list-group list-group-flush">
                         @php
                             $fields = [
-                                'name' => 'Name',
-                                'position' => 'Position',
-                                'company' => 'Company',
-                                'email' => 'Email',
-                                'phone' => 'Telephone',
-                                'address' => 'Address',
-                                'notes' => 'Notes'
+                                'name'=>'Name','position'=>'Position','company'=>'Company',
+                                'email'=>'Email','phone'=>'Telephone','address'=>'Address','notes'=>'Notes'
                             ];
                         @endphp
 
                         @foreach ($fields as $field => $label)
                             <li class="list-group-item contact-row">
-                                <span class="label">{{ $label }}</span>
-                                <span class="colon">:</span>
+                                <span class="label">{{ $label }}</span><span class="colon">:</span>
                                 <span class="value">
                                     <span class="view-mode">{{ $lead->crm->$field ?? '-' }}</span>
-                                    <input type="text"
-                                        class="form-control form-control-sm edit-mode d-none"
-                                        data-field="{{ $field }}"
-                                        value="{{ $lead->crm->$field ?? '' }}">
+                                    <input type="text" class="form-control form-control-sm edit-mode d-none" data-field="{{ $field }}" value="{{ $lead->crm->$field ?? '' }}">
                                 </span>
                             </li>
                         @endforeach
-
-                        <li class="list-group-item contact-row">
-                            <span class="label">Category</span>
-                            <span class="colon">:</span>
-                            <span class="value">{{ $lead->crm->category->name ?? '-' }}</span>
-                        </li>
-
-                        <!-- <li class="list-group-item contact-row">
-                            <span class="label">Assigned To</span>
-                            <span class="colon">:</span>
-                            <span class="value">{{ $lead->assignedUser->name ?? '-' }}</span>
-                        </li> -->
-
-                        <li class="list-group-item contact-row">
-                            <span class="label">Status</span>
-                            <span class="colon">:</span>
-                            <span class="value">
-                                <span class="badge bg-{{ [
-                                    'new'=>'secondary',
-                                    'contacted'=>'info',
-                                    'qualified'=>'success',
-                                    'unqualified'=>'danger'
-                                ][$lead->status] ?? 'secondary' }}">
-                                    {{ ucfirst($lead->status) }}
-                                </span>
-                            </span>
-                        </li>
                     </ul>
                 </div>
 
                 {{-- PERSONA TAB --}}
-                <div class="tab-pane fade" id="persona" role="tabpanel" aria-labelledby="persona-tab">
+                <div class="tab-pane fade" id="persona" role="tabpanel">
                     @if($lead->persona)
                     <div class="d-flex justify-content-end mb-3">
-                        <button id="editBtnPersona" class="btn btn-warning btn-sm me-2">
-                            <i class="bi bi-pencil-square"></i> Edit
-                        </button>
-                        <button id="saveBtnPersona" class="btn btn-success btn-sm d-none">
-                            <i class="bi bi-check2-circle"></i> Save
-                        </button>
-                        <button id="cancelBtnPersona" class="btn btn-secondary btn-sm d-none">
-                            <i class="bi bi-x-circle"></i> Cancel
-                        </button>
+                        <button id="editBtnPersona" class="btn btn-warning btn-sm me-2"><i class="bi bi-pencil-square"></i> Edit</button>
+                        <button id="saveBtnPersona" class="btn btn-success btn-sm d-none"><i class="bi bi-check2-circle"></i> Save</button>
+                        <button id="cancelBtnPersona" class="btn btn-secondary btn-sm d-none"><i class="bi bi-x-circle"></i> Cancel</button>
                     </div>
 
                     <ul class="list-group list-group-flush">
                         @foreach([
-                            'date_of_birth' => 'Date of Birth',
-                            'gender' => 'Gender',
-                            'education_level' => 'Education',
-                            'income_level' => 'Income',
-                            'key_interest' => 'Key Interest',
-                            'pain_point' => 'Pain Point',
-                            'notes' => 'Notes'
+                            'date_of_birth'=>'Date of Birth','gender'=>'Gender','education_level'=>'Education',
+                            'income_level'=>'Income','key_interest'=>'Key Interest','pain_point'=>'Pain Point','notes'=>'Notes'
                         ] as $field => $label)
                             <li class="list-group-item persona-row">
-                                <span class="label">{{ $label }}</span>
-                                <span class="colon">:</span>
+                                <span class="label">{{ $label }}</span><span class="colon">:</span>
                                 <span class="value">
                                     <span class="view-mode">{{ $lead->persona->$field ?? '-' }}</span>
-                                    <input type="text"
-                                        class="form-control form-control-sm edit-mode-persona d-none"
-                                        data-field="{{ $field }}"
-                                        value="{{ $lead->persona->$field ?? '' }}">
+                                    <input type="text" class="form-control form-control-sm edit-mode-persona d-none" data-field="{{ $field }}" value="{{ $lead->persona->$field ?? '' }}">
                                 </span>
                             </li>
                         @endforeach
@@ -154,30 +89,42 @@
                 </div>
 
                 {{-- FOLLOW UP TAB --}}
-                <div class="tab-pane fade" id="followup" role="tabpanel" aria-labelledby="followup-tab">
+                <div class="tab-pane fade" id="followup" role="tabpanel">
                     @if($lead->followUps->count())
-                        <table class="table table-hover mt-3">
-                            <thead>
-                                <tr>
-                                    <th>No</th>
-                                    <th>Tanggal</th>
-                                    <th>Type</th>
-                                    <th>Notes</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach($lead->followUps as $index => $fu)
-                                    <tr>
-                                        <td>{{ $index + 1 }}</td>
-                                        <td>{{ \Carbon\Carbon::parse($fu->date)->format('d M Y') }}</td>
-                                        <td>{{ ucfirst($fu->type) }}</td>
-                                        <td>{{ $fu->notes }}</td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
+                    <div class="d-flex justify-content-end mb-3">
+                        <button id="editBtnFollow" class="btn btn-warning btn-sm me-2"><i class="bi bi-pencil-square"></i> Edit</button>
+                        <button id="saveBtnFollow" class="btn btn-success btn-sm d-none"><i class="bi bi-check2-circle"></i> Save</button>
+                        <button id="cancelBtnFollow" class="btn btn-secondary btn-sm d-none"><i class="bi bi-x-circle"></i> Cancel</button>
+                    </div>
+
+                    <table class="table table-hover mt-3">
+                        <thead>
+                            <tr>
+                                <th>No</th>
+                                <th>Tanggal</th>
+                                <th>Type</th>
+                                <th>Notes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($lead->followUps as $index => $fu)
+                            <tr data-id="{{ $fu->id }}">
+                                <td>{{ $index + 1 }}</td>
+                                <td><span class="view-mode">{{ \Carbon\Carbon::parse($fu->date)->format('d M Y') }}</span>
+                                    <input type="date" class="form-control form-control-sm edit-mode-follow d-none" data-field="date" value="{{ $fu->date }}">
+                                </td>
+                                <td><span class="view-mode">{{ ucfirst($fu->type) }}</span>
+                                    <input type="text" class="form-control form-control-sm edit-mode-follow d-none" data-field="type" value="{{ $fu->type }}">
+                                </td>
+                                <td><span class="view-mode">{{ $fu->notes }}</span>
+                                    <input type="text" class="form-control form-control-sm edit-mode-follow d-none" data-field="notes" value="{{ $fu->notes }}">
+                                </td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
                     @else
-                        <p class="text-muted mt-3">Belum ada follow up.</p>
+                        <p class="text-muted">Belum ada follow up.</p>
                     @endif
                 </div>
             </div>
@@ -185,149 +132,92 @@
     </div>
 </div>
 
-{{-- === STYLE === --}}
-<link
-  rel="stylesheet"
-  href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"
-/>
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+{{-- STYLES --}}
 <style>
     .nav-tabs .nav-link.active {
-        color: #fff;
-        background-color: #dc3545;
-        border-color: #dc3545 #dc3545 #fff;
-    }
-    .card .list-group-item {
-        border: none;
-        padding-left: 0;
+        color: #fff; background-color: #dc3545; border-color: #dc3545 #dc3545 #fff;
     }
     .contact-row, .persona-row {
-        display: grid;
-        grid-template-columns: 150px 10px 1fr;
-        align-items: center;
-        gap: 5px;
+        display: grid; grid-template-columns: 150px 10px 1fr; align-items: center;
     }
-    .label { font-weight: 600; }
-    .colon { text-align: center; }
-    .value { word-break: break-word; }
-    .edit-mode, .edit-mode-persona { max-width: 300px; }
+    .label { font-weight: 600; } .colon { text-align: center; }
 </style>
 
-{{-- === SCRIPT === --}}
+{{-- SCRIPTS --}}
 <script>
 document.addEventListener('DOMContentLoaded', () => {
+    // === CONTACT ===
+    setupEditableSection('#contact', '/admin/crm/{{ $lead->crm->id }}/update-multiple', '.edit-mode');
 
-    // === CONTACT TAB ===
-    const editBtn = document.getElementById('editBtn');
-    const saveBtn = document.getElementById('saveBtn');
-    const cancelBtn = document.getElementById('cancelBtn');
-    const viewModes = document.querySelectorAll('#contact .view-mode');
-    const editModes = document.querySelectorAll('#contact .edit-mode');
-    let originalValues = {};
+    // === PERSONA ===
+    @if($lead->persona)
+    setupEditableSection('#persona', '/personas/{{ $lead->persona->id }}/update-multiple', '.edit-mode-persona');
+    @endif
+
+    // === FOLLOW UP ===
+    setupEditableSection('#followup', '/followups/update-multiple', '.edit-mode-follow', true);
+});
+
+function setupEditableSection(tabSelector, url, inputSelector, isTable = false) {
+    const tab = document.querySelector(tabSelector);
+    if (!tab) return;
+
+    const editBtn = tab.querySelector('[id^=editBtn]');
+    const saveBtn = tab.querySelector('[id^=saveBtn]');
+    const cancelBtn = tab.querySelector('[id^=cancelBtn]');
+    const viewModes = tab.querySelectorAll('.view-mode');
+    const editModes = tab.querySelectorAll(inputSelector);
+    let original = {};
+
+    if (!editBtn) return;
 
     editBtn.addEventListener('click', () => {
-        editModes.forEach(input => {
-            originalValues[input.dataset.field] = input.value;
-            input.classList.remove('d-none');
-        });
-        viewModes.forEach(span => span.classList.add('d-none'));
-        editBtn.classList.add('d-none');
-        saveBtn.classList.remove('d-none');
-        cancelBtn.classList.remove('d-none');
+        editModes.forEach(i => { original[i.dataset.field + (isTable ? i.closest('tr').dataset.id : '')] = i.value; i.classList.remove('d-none'); });
+        viewModes.forEach(v => v.classList.add('d-none'));
+        toggleButtons(editBtn, saveBtn, cancelBtn);
     });
 
     cancelBtn.addEventListener('click', () => {
-        editModes.forEach(input => {
-            input.value = originalValues[input.dataset.field];
-            input.classList.add('d-none');
-        });
-        viewModes.forEach(span => span.classList.remove('d-none'));
-        saveBtn.classList.add('d-none');
-        cancelBtn.classList.add('d-none');
-        editBtn.classList.remove('d-none');
+        editModes.forEach(i => { i.value = original[i.dataset.field + (isTable ? i.closest('tr').dataset.id : '')]; i.classList.add('d-none'); });
+        viewModes.forEach(v => v.classList.remove('d-none'));
+        toggleButtons(saveBtn, cancelBtn, editBtn);
     });
 
     saveBtn.addEventListener('click', async () => {
-        const id = {{ $lead->crm->id }};
-        const updates = {};
-        editModes.forEach(input => updates[input.dataset.field] = input.value);
+        const updates = [];
+        if (isTable) {
+            tab.querySelectorAll('tbody tr').forEach(tr => {
+                const id = tr.dataset.id;
+                const data = {};
+                tr.querySelectorAll(inputSelector).forEach(i => data[i.dataset.field] = i.value);
+                updates.push({ id, ...data });
+            });
+        } else {
+            const single = {};
+            editModes.forEach(i => single[i.dataset.field] = i.value);
+            updates.push(single);
+        }
 
         try {
-            const res = await fetch(`/admin/crm/${id}/update-multiple`, {
+            const res = await fetch(url, {
                 method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                },
-                body: JSON.stringify(updates)
+                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+                body: JSON.stringify({ updates })
             });
-
             const data = await res.json();
             if (!res.ok || !data.success) throw new Error();
-
-            alert(' Contact data saved successfully!');
+            alert('Data berhasil disimpan!');
             location.reload();
-        } catch (err) {
-            alert(' Terjadi kesalahan saat menyimpan data contact.');
+        } catch (e) {
+            alert('Gagal menyimpan data!');
         }
     });
+}
 
-    // === PERSONA TAB ===
-    const editBtnP = document.getElementById('editBtnPersona');
-    const saveBtnP = document.getElementById('saveBtnPersona');
-    const cancelBtnP = document.getElementById('cancelBtnPersona');
-    const editModesP = document.querySelectorAll('#persona .edit-mode-persona');
-    const viewModesP = document.querySelectorAll('#persona .view-mode');
-    let originalPersona = {};
-
-    if (editBtnP) {
-        editBtnP.addEventListener('click', () => {
-            editModesP.forEach(input => {
-                originalPersona[input.dataset.field] = input.value;
-                input.classList.remove('d-none');
-            });
-            viewModesP.forEach(span => span.classList.add('d-none'));
-            editBtnP.classList.add('d-none');
-            saveBtnP.classList.remove('d-none');
-            cancelBtnP.classList.remove('d-none');
-        });
-
-        cancelBtnP.addEventListener('click', () => {
-            editModesP.forEach(input => {
-                input.value = originalPersona[input.dataset.field];
-                input.classList.add('d-none');
-            });
-            viewModesP.forEach(span => span.classList.remove('d-none'));
-            saveBtnP.classList.add('d-none');
-            cancelBtnP.classList.add('d-none');
-            editBtnP.classList.remove('d-none');
-        });
-
-        saveBtnP.addEventListener('click', async () => {
-            const id = {{ $lead->persona->id ?? 'null' }};
-            const updates = {};
-            editModesP.forEach(input => updates[input.dataset.field] = input.value);
-
-            try {
-                const res = await fetch(`/persona/${id}/update-multiple`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                    },
-                    body: JSON.stringify(updates)
-                });
-
-                const data = await res.json();
-                if (!res.ok || !data.success) throw new Error();
-
-                alert('✅ Data persona berhasil disimpan!');
-                location.reload();
-            } catch (err) {
-                alert('Terjadi kesalahan saat menyimpan data persona.');
-            }
-        });
-    }
-});
+function toggleButtons(...buttons) {
+    document.querySelectorAll('button').forEach(b => b.classList.add('d-none'));
+    buttons.forEach(b => b.classList.remove('d-none'));
+}
 </script>
+
 </x-app-layout>

@@ -19,4 +19,9 @@ class CustomerPersona extends Model
     {
         return $this->belongsTo(Crm::class);
     }
+    
+    public function lead()
+    {
+        return $this->belongsTo(Lead::class);
+    }
 }

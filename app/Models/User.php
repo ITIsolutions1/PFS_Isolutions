@@ -21,7 +21,8 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
-        'role', 
+        'role',
+        'snoozed_until'
     ];
 
     /**
@@ -41,7 +42,7 @@ class User extends Authenticatable
      */
     protected $casts = [
         'email_verified_at' => 'datetime',
-        'last_login_at' => 'datetime', 
+        'last_login_at' => 'datetime',
         'password' => 'hashed',
     ];
 

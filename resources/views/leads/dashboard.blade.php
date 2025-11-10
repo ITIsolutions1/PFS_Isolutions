@@ -226,9 +226,15 @@
             <form action="">
                 <select id="snooze_duration" class="form-select" aria-label="Default select example">
                     <option selected>Snooze Until</option>
-                    <option value="1m">1 minute</option>
-                    <option value="5m">5 minute</option>
-                    <option value="1h">1 Hours</option>
+                    <option value="5-s">5 Seconds</option>
+                    <option value="30-s">30 Seconds</option>
+                    <option value="1-m">1 Minute</option>
+                    <option value="5-m">5 Minutes</option>
+                    <option value="1-h">1 Hours</option>
+                    <option value="2-h">2 Hours</option>
+                    <option value="1-d">1 Day</option>
+                    <option value="2-d">2 Days</option>
+                    <option value="1-w">1 Week</option>
                 </select>
             </form>
         </div>
@@ -246,11 +252,19 @@
     </div>
   </div>
 </div>
-
+<div>
+    <input type="hidden" id="user_id" value="{{ $user_id }}" data-show="{{ $show }}">
+</div>
 @push('scripts')
 <script>
+
 const snooze_duration = document.querySelector('#snooze_duration')
+const user_id = document.querySelector('#user_id').getAttribute('value')
+const show = document.querySelector('#user_id').getAttribute('data-show')
+console.log('this user ' + user_id)
+console.log(show)
 snooze_duration.addEventListener('change', async (item) => {
+    const snooze_duration_time = document.querySelector('#snooze_duration').value;
     const response = await fetch('/api/snooze_reminders', {
         method: 'POST',
         headers: {
@@ -258,15 +272,17 @@ snooze_duration.addEventListener('change', async (item) => {
             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
         },
         body: JSON.stringify({
-            duration: '5m',
-            user_id: 1
+            duration: snooze_duration_time,
+            user_id:   user_id
         })
     });
+
     const data3 = await response.json();
     console.log(data3)
 
     const value = item.target.value;
     console.log(value)
+    console.log(snooze_duration_time)
 })
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -280,7 +296,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const data2 = await response2.json()
     console.log(data2.length)
     // Tampilkan modal
-    if(data2.length > 0){
+    if(data2.length > 0 && show == 'yes'){
         modal.show();
     }
 

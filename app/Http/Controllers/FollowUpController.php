@@ -4,8 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Models\Lead;
 use App\Models\FollowUp;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Auth;
+
 
 class FollowUpController extends Controller
 {
@@ -108,6 +111,11 @@ class FollowUpController extends Controller
     public function get_appointment(){
         // $reminders = FollowUp::where('type', 'appointment')->with('lead')->get();
         // return "test api";
+        $snoozed_until = User::findOrFail(10);
+
+        $now = Carbon::now();
+        $show = $snoozed_until > $now ? 'yes' : 'no' ;
+
         $reminders = FollowUp::where('type', 'appointment')
         ->whereNotNull('date')
         ->whereNull('dismissable')
@@ -118,6 +126,10 @@ class FollowUpController extends Controller
         ->get();
 
         return $reminders;
+        // return [
+        //     'snoozed_until' => $show,
+        //     'reminders' => $reminders
+        // ];
     }
 
     public function dismiss_appointment($id){
@@ -150,12 +162,69 @@ class FollowUpController extends Controller
     }
 
     public function snooze_reminders(Request $request){
-        return response()->json([
-            'status' => 'success',
-            'message' => 'test snooze',
-            'duration' => $request->duration,
-            'user_id' => $request->user_id,
-        ]);
+
+        try{
+            // $user = Auth::user();
+            $user = User::findOrFail($request->user_id);
+            list($duration, $time) = explode('-', $request->duration);
+            // $user->update([
+            //     'snoozed_until' => Carbon::now()->addSeconds(30),
+            // ]);
+            // $user->save();
+            $category = '';
+            switch ($time) {
+                case 's':
+                    $category = 'S';
+                    $user->update([
+                        'snoozed_until' => Carbon::now()->addSeconds($duration),
+                    ]);
+                    $user->save();
+                    break;
+                case 'm':
+                    $category = 'M';
+                    $user->update([
+                        'snoozed_until' => Carbon::now()->addMinutes($duration),
+                    ]);
+                    $user->save();
+                    break;
+                case 'h':
+                    $category = 'H';
+                    $user->update([
+                        'snoozed_until' => Carbon::now()->addHours($duration),
+                    ]);
+                    $user->save();
+                    break;
+                case 'd':
+                    $category = 'D';
+                    $user->update([
+                        'snoozed_until' => Carbon::now()->addDays($duration),
+                    ]);
+                    $user->save();
+                    break;
+                case 'w':
+                    $category = 'W';
+                    $user->update([
+                        'snoozed_until' => Carbon::now()->addWeeks($duration),
+                    ]);
+                    $user->save();
+            }
+            return response()->json([
+                'status' => 'success',
+                'message' => 'test snooze',
+                // 'duration' => $duration,
+                'time' => $time,
+                'duration' => $duration,
+                // 'test' => $test,
+                'category' => $category,
+                'user_id' => $request->user_id,
+                // 'user' => $user,
+            ]);
+        }catch(\Exception $e){
+            return response()->json([
+                'status' => 'FAILED',
+                'message' => 'ADA KESALAHAN'
+            ]);
+        }
     }
 }
 

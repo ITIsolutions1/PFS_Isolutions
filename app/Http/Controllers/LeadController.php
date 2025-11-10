@@ -10,6 +10,8 @@ use App\Models\CustomerPersona;
 use App\Models\User;
 use App\Models\Rfp;
 use App\Models\Categories;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Carbon;
 
 class LeadController extends Controller
 {
@@ -21,10 +23,10 @@ public function dashboard()
     if ($user->role === 'admin') {
         $categories = Categories::all();
     } else {
-        $categories = $user->categories; 
+        $categories = $user->categories;
     }
 
-    $categoryIds = $categories->pluck('id'); 
+    $categoryIds = $categories->pluck('id');
 
     $totalLeads = \DB::table('leads')->count();
 
@@ -53,8 +55,9 @@ public function dashboard()
         $index = array_search($cat->category_name, $priority);
         return $index === false ? 999 : $index;
     });
-
-    return view('leads.dashboard', compact('totalLeads', 'leadByCategory'));
+    $show = Carbon::now() > Auth::user()->snoozed_until ? 'yes' : 'no';
+    $user_id = Auth::user()->id;
+    return view('leads.dashboard', compact('totalLeads', 'leadByCategory', 'user_id', 'show'));
 }
 
 
@@ -160,17 +163,17 @@ public function index(Request $request)
     if ($user->role === 'admin') {
         $categories = \App\Models\Categories::all();
     } else {
-        $categories = $user->categories; 
+        $categories = $user->categories;
     }
 
-    $categoryIds = $categories->pluck('id'); 
+    $categoryIds = $categories->pluck('id');
     $selectedCategoryId = $request->get('category_id');
     $sort = $request->get('sort', 'created_at_desc');
 
     $leadsQuery = Lead::with(['crm.category', 'assignedUser', 'followUps'])
         ->whereHas('crm', function ($q) use ($categoryIds) {
             $q->whereIn('category_id', $categoryIds);
-        }); 
+        });
 
     if ($selectedCategoryId && $categoryIds->contains($selectedCategoryId)) {
         $leadsQuery->whereHas('crm', function ($q) use ($selectedCategoryId) {
@@ -266,7 +269,7 @@ public function createFromCrm($crmId)
         'crm_id' => $crm->id,
         'source' => $crm->source ?? '',
         'status' => 'new',
-        'assigned_to' => null, 
+        'assigned_to' => null,
     ]);
 
     return redirect()->route('leads.index')->with('success', 'Lead successfully created!');
@@ -275,8 +278,8 @@ public function createFromCrm($crmId)
 
 public function create()
 {
-    $crms = Crm::orderBy('name')->get(); 
-    $users = User::orderBy('name')->get(); 
+    $crms = Crm::orderBy('name')->get();
+    $users = User::orderBy('name')->get();
     return view('leads.create', compact('crms', 'users'));
 }
 
@@ -300,7 +303,7 @@ public function create()
     {
          $categories = Categories::orderBy('name')->get();
         $crms = Crm::all();
-        $users = User::all(); 
+        $users = User::all();
         return view('leads.edit', compact('lead', 'crms', 'users', 'categories'));
     }
 
@@ -354,7 +357,7 @@ public function update(Request $request, Lead $lead)
         // Load semua relasi yang dibutuhkan untuk lead ini
         $lead->load('crm', 'followUps', 'persona', 'assignedUser');
 
-        $types = FollowUp::$types; 
+        $types = FollowUp::$types;
 
         return view('leads.show', compact('lead', 'types'));
     }
@@ -374,7 +377,7 @@ public function update(Request $request, Lead $lead)
         ->where('status', $status);
 
     // Filter untuk non-admin → hanya project yang dia punya
-  
+
     // Tentukan jumlah item per halaman
     $perPage = 5;
 

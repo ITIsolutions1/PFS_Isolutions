@@ -1,13 +1,6 @@
 <x-app-layout>
-  <div class="container mt-5">
-    <div class="text-center mb-5">
-      <h2 class="fw-bold mb-2" style="font-size: 2.2rem; color: #b22222;">
-        <strong>LEADS DASHBOARD</strong>
-      </h2>
-      <p class="text-secondary">
-        Analysis of Filtered CRM Leads Performance by Category
-      </p>
-    </div>
+
+    
 
     <style>
       :root {
@@ -173,6 +166,33 @@
       }
     </style>
 
+  <div class="container mt-5">
+    <div class="text-center mb-5">
+      <h2 class="fw-bold mb-2" style="font-size: 2.2rem; color: #b22222;">
+        <strong>LEADS DASHBOARD</strong>
+      </h2>
+      <p class="text-secondary">
+        Analysis of Filtered CRM Leads Performance by Category
+      </p>
+    </div>
+
+
+<div class="d-flex justify-content-end mb-4">
+    <div class="d-flex" style="max-width: 280px;">
+        <input 
+            type="text" 
+            id="searchCategory" 
+            class="form-control shadow-sm me-2"
+            placeholder="🔍 Search lead name..."
+        />
+        
+        <button type="button" class="btn btn-danger" onclick="filterTable()">
+            Search
+        </button>
+    </div>
+</div>
+
+<div id="categoryContainer">
     <div class="stats-container">
       @foreach($leadByCategory as $category)
         <div class="stat-card"
@@ -189,19 +209,31 @@
         </div>
       @endforeach
 
-      <div class="stat-card"
-           onclick="window.location='{{ route('leads.byCategory', ['id' => $category->category_id]) }}'">
-        <div class="inner">
-          <h3>{{ $totalLeads }}</h3>
-          <p>Total Leads</p>
-        </div>
-        <i class="bi bi-people stat-icon"></i>
-        <div class="stat-footer">
-          <span>View All Leads</span>
-          <i class="bi bi-arrow-right-circle"></i>
-        </div>
-      </div>
+      <div class="stat-card" onclick="window.location='{{ route('leads.index') }}'">
+    <div class="inner">
+        <h3>{{ $totalLeads }}</h3>
+        <p>Total Leads</p>
     </div>
+    <i class="bi bi-people stat-icon"></i>
+    
+    <div class="stat-footer">
+        <span>View All Leads</span>
+        <i class="bi bi-arrow-right-circle"></i>
+    </div>
+</div>
+
+    </div>
+</div>
+
+
+<div id="allLeadsContainer" style="display:none;">
+    {{-- AJAX akan memasukkan table.blade.php ke sini --}}
+</div>
+
+
+
+
+
   </div>
 
 <div class="modal fade" id="notificationsModal" tabindex="-1" aria-labelledby="notificationsModalLabel" aria-hidden="true">
@@ -355,7 +387,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
                             <div>
                                 <span>
-                                    <p class="fs-5 fw-bold text-danger"><i class="fas fa-user-alt"></i> ${item.lead.crm.name}</p>
+                                 <p class="fs-5 fw-bold">
+                                    <a href="/admin/leads/${item.lead.id}" class="text-danger text-decoration-none">
+                                        <i class="fas fa-user-alt"></i> ${item.lead.crm.name}
+                                    </a>
+                                </p>
+
                                 </span>
                                 <span>
                                     <p class="fs-6"> ${item.lead.crm.category.name}</p>
@@ -424,5 +461,42 @@ async function dismissAll() {
     // console.log(reminders)
 }
 </script>
+
+<script>
+const input = document.getElementById("searchCategory");
+const categoryBox = document.getElementById("categoryContainer");
+const allLeads = document.getElementById("allLeadsContainer");
+
+input.addEventListener("keyup", function () {
+    let q = this.value.trim().toLowerCase();
+
+    // Jika kotak search kosong → tampilkan kategori lagi
+    if (q.length === 0) {
+        allLeads.style.display = "none";
+        categoryBox.style.display = "block";
+        allLeads.innerHTML = "";
+        return;
+    }
+
+    // Jika ada tulisan → sembunyikan kategori & tampilkan tabel
+    categoryBox.style.display = "none";
+    allLeads.style.display = "block";
+
+    fetch(`/leads-dashboard/load-index`)
+        .then(res => res.text())
+        .then(html => {
+            allLeads.innerHTML = html;
+
+            // filter baris tabel
+            document.querySelectorAll("#allLeadsContainer table tbody tr").forEach(row => {
+                row.style.display = row.innerText.toLowerCase().includes(q)
+                    ? ""
+                    : "none";
+            });
+        });
+});
+</script>
+
+
 @endpush
 </x-app-layout>

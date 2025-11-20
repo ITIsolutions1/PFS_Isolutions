@@ -313,18 +313,29 @@ public function updateMultiple(Request $request, $id)
 {
     $crm = Crm::findOrFail($id);
 
-    $allowed = ['name', 'position', 'company', 'email', 'phone', 'address', 'notes'];
+    // Field yang boleh di-update sesuai database
+    $allowed = [
+        'category_id',
+        'name',
+        'position',
+        'company',
+        'email',
+        'address',
+        'notes',
+        'phone',
+        'website'
+    ];
 
-    foreach ($request->all() as $field => $value) {
-        if (in_array($field, $allowed)) {
-            $crm->$field = $value;
-        }
-    }
+    // Ambil hanya field yang dikirim dan diizinkan
+    $data = $request->only($allowed);
 
-    $crm->save();
+    // Update
+    $crm->update($data);
 
     return response()->json(['success' => true]);
 }
+
+
 
 
 

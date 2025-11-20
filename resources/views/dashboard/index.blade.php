@@ -123,7 +123,163 @@
   </div>
 </div>
 
+<div class="row mt-10 ">
+    <div class="col-12 text-center">
+        <h1 class="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-2">
+       <strong style="font-size: 2rem;">Proposal</strong>
+
+        </h1>
+        <!-- <p class="text-gray-500 dark:text-gray-400 text-sm">
+            Statistics on the number of projects by category and year
+        </p> -->
+    </div>
+</div>
+
+<div class="stats-container">
+
+    <!-- RFP -->
+    <div class="stat-card bg-primary"
+         onclick="window.location='{{ route('proposal.byStatus', ['status' => 'rfp']) }}'">
+        <div class="inner">
+            <h3>{{ $proposalCounts['rfp'] }}</h3>
+            <p>RFP</p>
+        </div>
+        <i class="bi bi-clipboard-check stat-icon"></i>
+        <div class="stat-footer">
+            <span>View RFP</span>
+            <i class="bi bi-arrow-right-circle"></i>
+        </div>
+    </div>
+
+    <!-- Draft -->
+    <div class="stat-card bg-secondary"
+         onclick="window.location='{{ route('proposal.byStatus', ['status' => 'draft']) }}'">
+        <div class="inner">
+            <h3>{{ $proposalCounts['draft'] }}</h3>
+            <p>Draft</p>
+        </div>
+        <i class="bi bi-pencil stat-icon"></i>
+        <div class="stat-footer">
+            <span>View Draft</span>
+            <i class="bi bi-arrow-right-circle"></i>
+        </div>
+    </div>
+
+    <!-- Submitted -->
+    <div class="stat-card bg-info"
+         onclick="window.location='{{ route('proposal.byStatus', ['status' => 'submitted']) }}'">
+        <div class="inner">
+            <h3>{{ $proposalCounts['submitted'] }}</h3>
+            <p>Submitted</p>
+        </div>
+        <i class="bi bi-send stat-icon"></i>
+        <div class="stat-footer">
+            <span>View Submitted</span>
+            <i class="bi bi-arrow-right-circle"></i>
+        </div>
+    </div>
+
+    <!-- Awaiting PO -->
+    <div class="stat-card bg-warning"
+         onclick="window.location='{{ route('proposal.byStatus', ['status' => 'awaiting_po']) }}'">
+        <div class="inner">
+            <h3>{{ $proposalCounts['awaiting_po'] }}</h3>
+            <p>Awaiting PO</p>
+        </div>
+        <i class="bi bi-hourglass-split stat-icon"></i>
+        <div class="stat-footer">
+            <span>View Awaiting PO</span>
+            <i class="bi bi-arrow-right-circle"></i>
+        </div>
+    </div>
+
+    <!-- Awarded -->
+    <div class="stat-card bg-success"
+         onclick="window.location='{{ route('proposal.byStatus', ['status' => 'awarded']) }}'">
+        <div class="inner">
+            <h3>{{ $proposalCounts['awarded'] }}</h3>
+            <p>Awarded</p>
+        </div>
+        <i class="bi bi-trophy stat-icon"></i>
+        <div class="stat-footer">
+            <span>View Awarded</span>
+            <i class="bi bi-arrow-right-circle"></i>
+        </div>
+    </div>
+
+    <!-- Decline -->
+    <div class="stat-card bg-dark"
+         onclick="window.location='{{ route('proposal.byStatus', ['status' => 'decline']) }}'">
+        <div class="inner">
+            <h3>{{ $proposalCounts['decline'] }}</h3>
+            <p>Declined</p>
+        </div>
+        <i class="bi bi-x-circle stat-icon"></i>
+        <div class="stat-footer">
+            <span>View Declined</span>
+            <i class="bi bi-arrow-right-circle"></i>
+        </div>
+    </div>
+
+    <!-- Lost -->
+    <div class="stat-card bg-danger"
+         onclick="window.location='{{ route('proposal.byStatus', ['status' => 'lost']) }}'">
+        <div class="inner">
+            <h3>{{ $proposalCounts['lost'] }}</h3>
+            <p>Lost</p>
+        </div>
+        <i class="bi bi-emoji-frown stat-icon"></i>
+        <div class="stat-footer">
+            <span>View Lost</span>
+            <i class="bi bi-arrow-right-circle"></i>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-10">
+    <div class="col-12 text-center">
+        <h2 class="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-2">
+            <strong>Proposal Status Per Year</strong>
+        </h2>
+        <p class="text-gray-500 dark:text-gray-400 text-sm">
+         Statistics on the number of proposals by status each year
+        </p>
+    </div>
+</div>
+
 <div class="row mt-4">
+    @foreach($statusPerYear->groupBy('status') as $status => $data)
+        @php
+            $chartId = 'chart-status-' . Str::slug($status, '-');
+        @endphp
+
+        <div class="col-lg-4 col-md-6 col-sm-12 connectedSortable">
+            <div class="card mb-4 bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 
+                        hover:shadow-2xl hover:scale-[1.02] transform transition-all duration-300
+                        border-t-4 border-blue-500">
+                <h3 class="text-lg font-semibold mb-4 text-gray-700 dark:text-gray-200 flex items-center gap-3">
+                    <div class="p-3 rounded-full bg-gradient-to-r from-blue-500 to-indigo-500 text-black shadow-md">
+                        <i class="fas fa-chart-bar"></i>
+                    </div>
+                    {{ ucfirst($status) }}
+                </h3>
+
+                <canvas id="{{ $chartId }}" class="h-56 w-full"></canvas>
+            </div>
+        </div>
+    @endforeach
+</div>
+
+
+
+
+
+<div class="row mt-10 ">
+   
+
+</div>
+
+<div class="row mt-5">
     <div class="col-12 text-center">
         <h2 class="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-2">
            <strong>CRM</strong> 
@@ -484,7 +640,48 @@
             }
         });
     });
+
 </script>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        @foreach($statusPerYear->groupBy('status') as $status => $rows)
+            const ctx{{ Str::slug($status, '_') }} = document.getElementById("chart-status-{{ Str::slug($status, '-') }}").getContext("2d");
+
+            new Chart(ctx{{ Str::slug($status, '_') }}, {
+                type: "bar",
+                data: {
+                    labels: {!! json_encode($rows->pluck('year')) !!},
+                    datasets: [{
+                        label: "{{ ucfirst($status) }}",
+                        data: {!! json_encode($rows->pluck('total')) !!},
+                        backgroundColor: "rgba(59, 130, 246, 0.6)",
+                        borderColor: "rgba(59, 130, 246, 1)",
+                        borderWidth: 2,
+                        borderRadius: 8,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: { stepSize: 1 }
+                        }
+                    }
+                }
+            });
+        @endforeach
+    });
+</script>
+
 
 
 

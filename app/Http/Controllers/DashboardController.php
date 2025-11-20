@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\ExperienceDetail;
 use App\Models\Lead;
 use Illuminate\Support\Facades\DB;
+use App\Models\Proposal;
 
 class DashboardController extends Controller
 {
@@ -55,9 +56,28 @@ public function index()
         ->orderBy('category')
         ->orderBy('year', 'asc')
         ->get();
+    
+          $proposalCounts = [
+        'rfp'         => Proposal::where('status', 'rfp')->count(),
+        'draft'       => Proposal::where('status', 'draft')->count(),
+        'submitted'   => Proposal::where('status', 'submitted')->count(),
+        'awaiting_po' => Proposal::where('status', 'awaiting_po')->count(),
+        'awarded'     => Proposal::where('status', 'awarded')->count(),
+        'decline'     => Proposal::where('status', 'decline')->count(),
+        'lost'        => Proposal::where('status', 'lost')->count(),
+    ];
+
+     $statusPerYear = Proposal::select(
+            DB::raw('YEAR(created_at) as year'),
+            'status',
+            DB::raw('COUNT(*) as total')
+        )
+        ->groupBy('year', 'status')
+        ->orderBy('year')
+        ->get();
 
 
-           // Statistik singkat
+        // Statistik singkat
         $totalProjects = ExperienceDetail::count();
 
     
@@ -72,7 +92,9 @@ public function index()
         'newLeads',
         'contactedLeads',
         'qualifiedLeads',
-        'totalLeads'
+        'totalLeads',
+        'proposalCounts',
+        'statusPerYear'
     ));
 }
 

@@ -56,6 +56,7 @@
                                 <i class="bi bi-flag me-1 text-primary"></i> Status
                             </label>
                             <select name="status" id="status" class="form-select shadow-sm">
+                                <option value="rfp">Rfp</option>
                                 <option value="draft">Draft</option>
                                 <option value="submitted">Submitted</option>
                                 <option value="awaiting_po">Awaiting PO</option>

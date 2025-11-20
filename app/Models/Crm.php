@@ -29,10 +29,16 @@ class Crm extends Model
     return $this->belongsTo(Categories::class, 'category_id');
 }
 
+    // public function persona()
+    // {
+    //     return $this->hasOne(CustomerPersona::class, 'crm_id');
+    // }
+
     public function persona()
-    {
-        return $this->hasOne(CustomerPersona::class, 'crm_id');
-    }
+{
+    return $this->hasMany(CustomerPersona::class, 'crm_id');
+}
+
 
     public function leads()
     {

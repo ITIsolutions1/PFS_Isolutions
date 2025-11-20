@@ -2,6 +2,35 @@
   rel="stylesheet"
   href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"
 />
+<style>
+.status-card {
+    width: 85px;
+    aspect-ratio: 1 / 1;
+    border-radius: 12px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    color: white; /* 👈 tulisan jadi putih */
+    box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+    transition: 0.2s;
+}
+
+.status-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 5px 14px rgba(0,0,0,0.25);
+}
+
+.status-card.inactive {
+    opacity: .65;
+    filter: grayscale(.3);
+}
+
+.status-wrapper {
+    gap: 4px !important; 
+}
+</style>
+
 
 <x-app-layout>
      <marquee behavior="scroll" direction="left" scrollamount="6" style="background-color: #ec1b2dff; color: #fce9ebff; padding: 10px; font-weight: bold;">
@@ -32,13 +61,69 @@
     </a>
   </div>
 
+@php
+    $statusOptions = [
+        'all' => 'All',
+        'rfp' => 'RFP',
+        'draft' => 'Draft',
+        'submitted' => 'Submitted',
+        'awaiting_po' => 'Awaiting PO',
+        'awarded' => 'Awarded',
+        'decline' => 'Decline',
+        'lost' => 'Lost',
+    ];
+
+    // Gradasi merah ke merah tua
+    $gradientColors = [
+        '#ffcccc', '#ff9999', '#ff7a7a', '#ff5d5d',
+        '#ff3f3f', '#ff2222', '#e60000', '#b30000'
+    ];
+@endphp
+
+<div class="d-flex justify-content-end mb-4">
+    <div class="d-flex gap-2 flex-wrap">
+
+        @foreach ($statusOptions as $key => $label)
+            @php
+                $index = array_search($key, array_keys($statusOptions));
+                $bg = $gradientColors[$index] ?? '#ffcccc';
+                $isActive = request('status') == $key || (request('status') === null && $key == 'all');
+
+                $total = $key === 'all'
+                    ? ($totalAll ?? 0)
+                    : ($statusCounts[$key] ?? 0);
+            @endphp
+
+            <a href="{{ route('proposals.index', ['status' => $key === 'all' ? null : $key]) }}"
+               class="text-decoration-none">
+
+                <div class="status-card {{ $isActive ? '' : 'inactive' }}"
+                     style="background: linear-gradient(135deg, {{ $bg }}, {{ $isActive ? '#ff0000' : '#a00000' }});">
+
+                    <div class="fw-bold">{{ $total }}</div>
+                    <div class="small">{{ $label }}</div>
+
+                </div>
+
+            </a>
+        @endforeach
+
+    </div>
+</div>
+
+
+
   {{-- HEADER --}}
   <div class="d-flex justify-content-between align-items-center mt-5 mb-4">
     <div>
-      <h2 class="fw-bold text-danger mb-0">
-        <i class="bi bi-folder-fill me-2"></i>
-        Proposal List
-      </h2>
+ <h2 class="fw-bold text-danger mb-0">
+    <i class="bi bi-folder-fill me-2"></i>
+    Proposal List
+    @if(request('status'))
+        - {{ strtoupper(request('status')) }}
+    @endif
+</h2>
+
       <p class="text-muted small mb-0">Stay organized and keep track of every proposal’s progress</p>
     </div>
 
@@ -60,6 +145,65 @@
     </div>
 
   </div>
+
+<div class="card border-0 shadow-sm rounded-4 mb-4">
+    <div class="card-body p-3">
+        <form method="GET" action="{{ route('proposals.index') }}">
+              <input type="hidden" name="status" value="{{ request('status') }}">
+            <div class="row g-2 align-items-end">
+
+                {{-- Search --}}
+                <div class="col-md-5">
+                    <label for="search" class="form-label small fw-semibold text-muted mb-1">
+                        Search 
+                    </label>
+                    <input
+                        type="text"
+                        name="search"
+                        id="search"
+                        class="form-control form-control-sm"
+                        placeholder="Type anything..."
+                        value="{{ request('search') }}"
+                    >
+                </div>
+
+                {{-- Pagination Size Selector --}}
+                <div class="col-md-2">
+                    <label for="per_page" class="form-label small fw-semibold text-muted mb-1">
+                        Show pagination
+                    </label>
+                    <select name="per_page" id="per_page" class="form-select form-select-sm">
+                        @foreach ([5, 10, 15, 25, 50, 100, 'all'] as $size)
+                            <option value="{{ $size }}" {{ request('per_page', 'all') == $size ? 'selected' : '' }}>
+                                {{ $size == 'all' ? 'All' : $size }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+
+                
+
+                {{-- Buttons --}}
+                <div class="col-md-3">
+                    <label class="form-label small fw-semibold text-muted mb-1 d-block">&nbsp;</label>
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-danger btn-sm px-3">
+                            <i class="bi bi-search me-1"></i> Apply
+                        </button>
+
+                        <a href="{{ route('proposals.index') }}" class="btn btn-outline-secondary btn-sm px-3">
+                            <i class="bi bi-arrow-repeat me-1"></i> Reset
+                        </a>
+                    </div>
+                </div>
+
+            </div>
+        </form>
+    </div>
+</div>
+
+
+
 
   {{-- TABLE --}}
   <div class="card shadow-sm border-0 rounded-4">

@@ -74,35 +74,25 @@ class CustomerPersonaController extends Controller
     return back()->with('success', 'Data persona diperbarui.');
 }
 
+public function updateMultiple(Request $request, $id)
+{
+    $persona = CustomerPersona::findOrFail($id);
 
- public function updateMultiple(Request $request, $id)
-    {
-        $persona = CustomerPersona::find($id);
-
-        if (!$persona) {
-            return response()->json(['success' => false, 'message' => 'Persona not found.'], 404);
+    foreach ($request->all() as $field => $value) {
+        if (in_array($field, $persona->getFillable())) {
+            $persona->$field = $value;
         }
-
-        $data = $request->all();
-
-        foreach ($data as $field => $value) {
-            if (in_array($field, [
-                'date_of_birth',
-                'gender',
-                'education_level',
-                'income_level',
-                'key_interest',
-                'pain_point',
-                'notes'
-            ])) {
-                $persona->$field = $value;
-            }
-        }
-
-        $persona->save();
-
-        return response()->json(['success' => true, 'message' => 'Persona updated successfully.']);
     }
+
+    $persona->save();
+
+    return response()->json(['success' => true]);
+}
+
+
+
+
+
 
 
 }

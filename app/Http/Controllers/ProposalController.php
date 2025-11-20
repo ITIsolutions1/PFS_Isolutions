@@ -14,11 +14,18 @@ class ProposalController extends Controller
     
 public function index(Request $request)
 {
-    $leads = Lead::all();
+    $search = $request->input('search');
     $sort = $request->get('sort', 'created_at_desc');
+    $perPage = $request->get('per_page', 'all'); // Default 10
 
-    $query = Proposal::with('assignedUser');
+    // Query dasar
+    $query = Proposal::with(['assignedUser', 'lead.crm']);
 
+     if ($request->status && $request->status !== 'all') {
+        $query->where('status', $request->status);
+    }
+
+    // Sorting logic
     switch ($sort) {
         case 'title_asc':
             $query->orderBy('title', 'asc');
@@ -46,10 +53,55 @@ public function index(Request $request)
             $query->orderBy('created_at', 'desc');
     }
 
-    $proposals = $query->paginate(10);
+    // Search
+    if ($search) {
+        $columns = \Schema::getColumnListing('proposals'); // Semua kolom
+        $excluded = ['id', 'created_at', 'updated_at'];
+        $columns = array_diff($columns, $excluded); // Kolom di-filter
 
-    return view('proposal.index', compact('proposals', 'leads', 'sort'));
+        $query->where(function ($subQuery) use ($columns, $search) {
+            foreach ($columns as $column) {
+                $subQuery->orWhere($column, 'like', "%{$search}%");
+            }
+
+            // Additional fields: User name & CRM name
+            $subQuery->orWhereHas('assignedUser', function ($nested) use ($search) {
+                $nested->where('name', 'like', "%{$search}%");
+            });
+
+            $subQuery->orWhereHas('lead.crm', function ($nested) use ($search) {
+                $nested->where('name', 'like', "%{$search}%");
+            });
+        });
+    }
+
+    // Pagination handling
+    if ($perPage === 'all') {
+        $perPage = 9999; // Agar tetap dalam bentuk paginator
+    }
+
+    $proposals = $query->paginate($perPage)->appends([
+        'search' => $search,
+        'sort' => $sort,
+        'per_page' => $request->get('per_page'),
+          'status' => $request->get('status'),
+    ]);
+
+    $statusCounts = Proposal::select('status', \DB::raw('COUNT(*) as total'))
+    ->groupBy('status')
+    ->pluck('total', 'status');
+
+$totalAll = Proposal::count();
+
+
+    $leads = Lead::all();
+
+    
+
+    return view('proposal.index', compact('proposals', 'leads', 'sort', 'perPage', 'statusCounts', 'totalAll', 'search'));
 }
+
+
 
 
     public function create()
@@ -62,10 +114,11 @@ public function index(Request $request)
 
 public function store(Request $request)
 {
+    // dd($request->all());
     $validated = $request->validate([
         'lead_id'     => 'required|exists:leads,id',
         'title'       => 'required|string|max:255',
-        'status'      => 'required|in:draft,submitted,awaiting_po,awarded,decline,lost',
+        'status'      => 'required|in:rfp,draft,submitted,awaiting_po,awarded,decline,lost',
         'assign_to'   => 'nullable|exists:users,id',
         'description' => 'nullable|string',
         'files.*'     => 'nullable|file|mimes:pdf,doc,docx,xlsx,xls,ppt,pptx,jpg,jpeg,png|max:10240',
@@ -129,7 +182,7 @@ public function update(Request $request, $id)
     $validated = $request->validate([
         'lead_id'     => 'required|exists:leads,id',
         'title'       => 'required|string|max:255',
-        'status'      => 'required|in:draft,submitted,awaiting_po,awarded,decline,lost',
+        'status'      => 'required|in:rfp,draft,submitted,awaiting_po,awarded,decline,lost',
         'assign_to'   => 'nullable|exists:users,id',
         'description' => 'nullable|string',
         'files.*'     => 'nullable|file|mimes:pdf,doc,docx,xlsx,xls,ppt,pptx,jpg,jpeg,png|max:10240',
@@ -166,6 +219,19 @@ public function show2($id)
     $proposal = Proposal::with('lead.followUps','lead.crm','lead.persona', 'assignedUser', 'files.file_name')->findOrFail($id);
     return view('proposal.show2', compact('proposal'));
 }
+
+
+public function byProposalStatus($status)
+{
+
+    
+    $proposals = Proposal::with('assignedUser')
+        ->where('status', $status)
+        ->paginate(10);
+
+    return view('proposal.index', compact('proposals', 'status'));
+}
+
 
 }
 

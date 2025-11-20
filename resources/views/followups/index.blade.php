@@ -71,9 +71,18 @@
             </div>
             <div class="d-flex gap-2">
               {{-- Tombol edit --}}
-              <a href="{{ route('followups.edit', [$lead->id, $f->id]) }}" class="btn btn-sm btn-outline-warning rounded-circle" title="Edit">
-                <i class="bi bi-pencil-square"></i>
-              </a>
+            @if($f->type === 'appointment')
+                <a href="{{ route('appointments.edit', [$lead->id, $f->id]) }}" 
+                  class="btn btn-sm btn-outline-warning rounded-circle" title="Edit Appointment">
+                    <i class="bi bi-pencil-square"></i>
+                </a>
+            @else
+                <a href="{{ route('followups.edit', [$lead->id, $f->id]) }}" 
+                  class="btn btn-sm btn-outline-warning rounded-circle" title="Edit Follow Up">
+                    <i class="bi bi-pencil-square"></i>
+                </a>
+            @endif
+
 
               {{-- Tombol delete --}}
               <form action="{{ route('followups.destroy', [$lead->id, $f->id]) }}" method="POST"

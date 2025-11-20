@@ -60,6 +60,17 @@ public function dashboard()
     return view('leads.dashboard', compact('totalLeads', 'leadByCategory', 'user_id', 'show'));
 }
 
+public function loadIndex()
+{
+    $leads = Lead::with(['crm.category'])
+        ->orderBy('created_at', 'desc')
+        ->get();
+
+    return view('leads.partials.table', compact('leads'));
+}
+
+
+
 
 
 
@@ -422,6 +433,28 @@ public function update(Request $request, Lead $lead)
                    ->appends($request->query());
 
     return view('leads.by_status', compact('leads', 'status'));
+}
+
+public function storePersona(Request $request, Lead $lead)
+{
+    $data = $request->validate([
+        'date_of_birth'   => 'nullable|date',
+        'gender'          => 'nullable|string',
+        'education_level' => 'nullable|string',
+        'income_level'    => 'nullable|string',
+        'key_interest'    => 'nullable|string',
+        'pain_point'      => 'nullable|string',
+        'notes'           => 'nullable|string',
+    ]);
+
+    // jika belum punya persona → buat baru
+    if (!$lead->persona) {
+        $lead->persona()->create($data);
+    } else {
+        $lead->persona()->update($data);
+    }
+
+    return response()->json(['success' => true]);
 }
 
 

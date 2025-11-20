@@ -38,14 +38,16 @@
     $user = Auth::user();
 @endphp
     @if($user && ($user->role === 'admin' || $user->categories->isNotEmpty()))
-    <a href="{{ route('leads.dashboard') }}"
-       class="flex items-center text-sm font-medium text-white dark:text-gray-300 hover:text-gray-200 transition">
-        <i class="fas fa-users mr-2"></i> Leads
-    </a>
+   
 
       <a href="{{ route('crm.index') }}"
        class="flex items-center text-sm font-medium text-white dark:text-gray-300 hover:text-gray-200 transition">
         <i class="fas fa-users mr-2"></i> CRM
+    </a>
+
+     <a href="{{ route('leads.dashboard') }}"
+       class="flex items-center text-sm font-medium text-white dark:text-gray-300 hover:text-gray-200 transition">
+        <i class="fas fa-users mr-2"></i> Leads
     </a>
 @endif
 
@@ -92,9 +94,6 @@
                class="flex items-center px-4 py-2 text-sm hover:bg-gray-700 rounded-b-lg transition">
                 <i class="fas fa-envelope mr-2"></i>Category
             </a>
-           
-
-          
         </div>
     </div>
 @endif

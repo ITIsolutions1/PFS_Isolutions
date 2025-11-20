@@ -58,6 +58,7 @@
                                 <i class="bi bi-flag me-1 text-primary"></i> Status
                             </label>
                             <select name="status" id="status" class="form-select shadow-sm">
+                                <option value="rfp" {{ old('status', $proposal->status) == 'rfp' ? 'selected' : '' }}>Rfp</option>
                                 <option value="draft" {{ old('status', $proposal->status) == 'draft' ? 'selected' : '' }}>Draft</option>
                                 <option value="submitted" {{ old('status', $proposal->status) == 'submitted' ? 'selected' : '' }}>Submitted</option>
                                 <option value="awaiting_po" {{ old('status', $proposal->status) == 'awaiting_po' ? 'selected' : '' }}>Awaiting PO</option>

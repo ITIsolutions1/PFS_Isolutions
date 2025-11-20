@@ -22,6 +22,30 @@ class FollowUpController extends Controller
 }
 
 
+public function storeshow(Request $request, $lead_id)
+{
+    $request->validate([
+        'type' => 'required',
+        'date' => 'required',
+        'notes' => 'nullable'
+    ]);
+
+    // Format tanggal sesuai type
+    $date = $request->type === 'appointment'
+        ? \Carbon\Carbon::parse($request->date)
+        : \Carbon\Carbon::parse($request->date)->format('Y-m-d');
+
+    FollowUp::create([
+        'lead_id' => $lead_id,
+        'type' => $request->type,
+        'date' => $date,
+        'notes' => $request->notes
+    ]);
+
+    return response()->json(['success' => true]);
+}
+
+
     public function store(Request $request, $lead_id)
     {
         $request->validate([
@@ -62,6 +86,36 @@ class FollowUpController extends Controller
             ->route('followups.index', $lead_id)
             ->with('success', 'Appointment successfully added!');
     }
+
+public function appointments_edit($lead_id, $id)
+{
+    $followup = FollowUp::findOrFail($id);
+    $lead = Lead::findOrFail($lead_id);
+
+    return view('followups.appointments_edit', compact('followup', 'lead'));
+}
+
+
+
+public function appointments_update(Request $request, $lead_id, $id)
+{
+    $followup = FollowUp::findOrFail($id);
+
+    $followup->update([
+        'date'  => $request->reminder_at,
+        'notes' => $request->description,
+    ]);
+
+    return redirect()
+        ->route('followups.index', $lead_id)
+        ->with('success', 'Appointment updated successfully!');
+}
+
+
+
+
+
+
 
     public function edit($lead_id, $id)
     {
@@ -298,5 +352,55 @@ class FollowUpController extends Controller
             ]);
         }
     }
+
+
+public function bulkUpdate(Request $request, $lead_id)
+{
+    // Pastikan payload valid
+    $request->validate([
+        'updates' => 'required|array'
+    ]);
+
+    foreach ($request->updates as $row) {
+
+        // tiap row harus punya id
+        if (!isset($row['id'])) continue;
+
+        $follow = FollowUp::where('lead_id', $lead_id)
+            ->where('id', $row['id'])
+            ->first();
+
+        if (!$follow) continue;
+
+        // Allowed fields
+        $allowed = ['date', 'type', 'notes'];
+
+        foreach ($allowed as $field) {
+            if (isset($row[$field])) {
+
+                // Jika type = appointment → simpan datetime
+                if ($field === 'date' && $follow->type === 'appointment') {
+                    $follow->date = \Carbon\Carbon::parse($row['date']);
+                }
+
+                // Jika bukan appointment → simpan date saja
+                elseif ($field === 'date') {
+                    $follow->date = \Carbon\Carbon::parse($row['date'])->format('Y-m-d');
+                }
+
+                // selain date
+                else {
+                    $follow->$field = $row[$field];
+                }
+            }
+        }
+
+        $follow->save();
+    }
+
+    return response()->json(['success' => true]);
+}
+
+
 }
 

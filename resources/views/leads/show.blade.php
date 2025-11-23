@@ -441,10 +441,16 @@ function setupEditableSection(tabSelector, url, inputSelector, isTable = false) 
 
             const json = await res.json();
 
-            if (!res.ok || !json.success) throw new Error();
+           if (!res.ok || !json.success) throw new Error();
 
+            // SIMPAN TAB SEKARANG
             alert("Data berhasil disimpan!");
+            const currentTab = document.querySelector('#leadTab .nav-link.active').id;
+            localStorage.setItem('activeLeadTab', currentTab);
+
+            // RELOAD HALAMAN
             location.reload();
+
 
         } catch (error) {
             alert("Gagal menyimpan data!");
@@ -453,9 +459,30 @@ function setupEditableSection(tabSelector, url, inputSelector, isTable = false) 
 
 }
 
-
-
 </script>
+
+<script>
+document.querySelectorAll('#leadTab .nav-link').forEach(tab => {
+    tab.addEventListener('shown.bs.tab', function () {
+        localStorage.setItem('activeLeadTab', this.id);
+    });
+});
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const activeTabId = localStorage.getItem('activeLeadTab');
+
+    if (activeTabId) {
+        const tabElement = document.getElementById(activeTabId);
+
+        if (tabElement) {
+            new bootstrap.Tab(tabElement).show();
+        }
+    }
+});
+</script>
+
 
 
 <SCript>

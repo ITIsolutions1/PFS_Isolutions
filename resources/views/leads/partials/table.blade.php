@@ -34,7 +34,15 @@
         <tbody>
             @foreach ($leads as $lead)
                 <tr>
-                     <td>{{ $lead->crm->name ?? '-' }}</td>
+                     <!-- <td>{{ $lead->crm->name ?? '-' }}</td> -->
+                     <td>
+                        <a href="{{ route('leads.show', $lead->id) }}" 
+                        style="color: #dc3545; font-weight: 600; text-decoration: none;">
+                            {{ $lead->crm->name ?? '-' }}
+                        </a>
+                    </td>
+                    
+
                     <td>{{ $lead->crm->category->name ?? '-' }}</td>
                   
                     <td>{{ $lead->created_at->format('Y-m-d') }}</td>

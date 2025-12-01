@@ -68,6 +68,35 @@
                             </select>
                         </div>
 
+                        <!-- Submitted Date -->
+                        <div class="col-md-6"
+                            id="submitted_date_wrapper"
+                            style="display: none;">
+                            <label for="submitted_at" class="form-label fw-semibold text-secondary">
+                                <i class="bi bi-calendar-check me-1 text-primary"></i> Submitted Date
+                            </label>
+
+                            <input type="date"
+                                name="submitted_at"
+                                id="submitted_at"
+                                class="form-control shadow-sm"
+                               value="{{ old('submitted_at', $proposal->submitted_at ? \Carbon\Carbon::parse($proposal->submitted_at)->format('Y-m-d') : '') }}"
+                            >
+                        </div>
+
+
+                        <!-- Decline Reason -->
+                        <div class="col-md-6" id="decline_reason_wrapper" style="display: none;">
+                            <label for="decline_reason" class="form-label fw-semibold text-secondary">
+                                <i class="bi bi-exclamation-triangle me-1 text-danger"></i> Decline Reason
+                            </label>
+                            <textarea name="decline_reason" id="decline_reason"
+                                    class="form-control shadow-sm"
+                                    placeholder="Explain why this proposal was declined...">{{ old('decline_reason', $proposal->decline_reason) }}</textarea>
+                        </div>
+
+
+
                         <!-- Assigned To -->
                         <div class="col-md-6">
                             <label for="assign_to" class="form-label fw-semibold text-secondary">
@@ -157,4 +186,73 @@
         .btn:hover { transform: translateY(-2px); }
         ul.list-unstyled li a:hover { text-decoration: underline; }
     </style>
+
+    <script>
+document.addEventListener('DOMContentLoaded', function () {
+    const statusSelect = document.getElementById('status');
+    const submittedWrapper = document.getElementById('submitted_date_wrapper');
+    const submittedInput = document.getElementById('submitted_at');
+
+    function toggleSubmittedDate() {
+        if (statusSelect.value === 'submitted') {
+            submittedWrapper.style.display = 'block';
+
+            // Jika tidak ada value, isi otomatis tanggal hari ini
+            if (!submittedInput.value) {
+                submittedInput.value = new Date().toISOString().split('T')[0];
+            }
+        } else {
+            submittedWrapper.style.display = 'none';
+            submittedInput.value = '';
+        }
+    }
+
+    // Run on load
+    toggleSubmittedDate();
+
+    // Run on change
+    statusSelect.addEventListener('change', toggleSubmittedDate);
+});
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const statusSelect = document.getElementById('status');
+
+    // SUBMITTED
+    const submittedWrapper = document.getElementById('submitted_date_wrapper');
+    const submittedInput = document.getElementById('submitted_at');
+
+    // DECLINE
+    const declineWrapper = document.getElementById('decline_reason_wrapper');
+    const declineInput = document.getElementById('decline_reason');
+
+    function toggleFields() {
+
+        // === SUBMITTED ===
+        if (statusSelect.value === 'submitted') {
+            submittedWrapper.style.display = 'block';
+            if (!submittedInput.value) {
+                submittedInput.value = new Date().toISOString().split('T')[0];
+            }
+        } else {
+            submittedWrapper.style.display = 'none';
+            submittedInput.value = '';
+        }
+
+        // === DECLINE ===
+        if (statusSelect.value === 'decline') {
+            declineWrapper.style.display = 'block';
+        } else {
+            declineWrapper.style.display = 'none';
+            declineInput.value = '';
+        }
+    }
+
+    toggleFields(); // load pertama
+    statusSelect.addEventListener('change', toggleFields);
+});
+</script>
+
+
 </x-app-layout>

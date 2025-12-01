@@ -91,7 +91,7 @@ class CrmController extends Controller
 
 
     $clients = $clientsQuery->paginate(50);
-    $crmCount = $clients->count();
+    $crmCount = $clients->total();
 
     return view('clients.index', compact('clients', 'categories', 'crmCount'));
 }

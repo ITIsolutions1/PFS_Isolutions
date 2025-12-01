@@ -114,32 +114,45 @@ $totalAll = Proposal::count();
 
 public function store(Request $request)
 {
-    // dd($request->all());
     $validated = $request->validate([
-        'lead_id'     => 'required|exists:leads,id',
-        'title'       => 'required|string|max:255',
-        'status'      => 'required|in:rfp,draft,submitted,awaiting_po,awarded,decline,lost',
-        'assign_to'   => 'nullable|exists:users,id',
-        'description' => 'nullable|string',
-        'files.*'     => 'nullable|file|mimes:pdf,doc,docx,xlsx,xls,ppt,pptx,jpg,jpeg,png|max:10240',
+        'lead_id'        => 'required|exists:leads,id',
+        'title'          => 'required|string|max:255',
+        'status'         => 'required|in:rfp,draft,submitted,awaiting_po,awarded,decline,lost',
+        'assign_to'      => 'nullable|exists:users,id',
+        'description'    => 'nullable|string',
+        'decline_reason' => 'nullable|string',
+        'files.*'        => 'nullable|file|mimes:pdf,doc,docx,xlsx,xls,ppt,pptx,jpg,jpeg,png|max:10240',
     ]);
+
+    // Atur submitted_at
+    $submittedDate = $validated['status'] === 'submitted'
+        ? now()
+        : null;
+
+    // Atur decline_reason (hanya saat status decline)
+    $declineReason = $validated['status'] === 'decline'
+        ? ($validated['decline_reason'] ?? null)
+        : null;
 
     $proposal = Proposal::create([
-        'lead_id'     => $validated['lead_id'],
-        'title'       => $validated['title'],
-        'status'      => $validated['status'],
-        'assign_to'   => $validated['assign_to'] ?? null,
-        'description' => $validated['description'] ?? null,
+        'lead_id'        => $validated['lead_id'],
+        'title'          => $validated['title'],
+        'status'         => $validated['status'],
+        'assign_to'      => $validated['assign_to'] ?? null,
+        'description'    => $validated['description'] ?? null,
+        'submitted_at'   => $submittedDate,
+        'decline_reason' => $declineReason,
     ]);
 
+    // Upload files jika ada
     if ($request->hasFile('files')) {
         foreach ($request->file('files') as $file) {
             $path = $file->store('proposal_files', 'public');
 
             ProposalFile::create([
                 'proposal_id' => $proposal->id,
-                'file_name'    => $file->getClientOriginalName(),
-                'file_path'    => $path,
+                'file_name'   => $file->getClientOriginalName(),
+                'file_path'   => $path,
             ]);
         }
     }
@@ -163,7 +176,9 @@ public function destroy($id)
 public function show($id)
 {
     $proposal = Proposal::with('lead.crm', 'assignedUser', 'files')->findOrFail($id);
-    return view('proposal.show', compact('proposal'));
+    $followups = $proposal->followups()->orderBy('followup_date', 'desc')->paginate(5);
+
+    return view('proposal.show', compact('proposal', 'followups'));
 }
 
 public function edit($id)
@@ -179,31 +194,52 @@ public function update(Request $request, $id)
 {
     $proposal = Proposal::findOrFail($id);
 
+    // Validasi dasar
     $validated = $request->validate([
-        'lead_id'     => 'required|exists:leads,id',
-        'title'       => 'required|string|max:255',
-        'status'      => 'required|in:rfp,draft,submitted,awaiting_po,awarded,decline,lost',
-        'assign_to'   => 'nullable|exists:users,id',
-        'description' => 'nullable|string',
-        'files.*'     => 'nullable|file|mimes:pdf,doc,docx,xlsx,xls,ppt,pptx,jpg,jpeg,png|max:10240',
+        'lead_id'        => 'required|exists:leads,id',
+        'title'          => 'required|string|max:255',
+        'status'         => 'required|in:rfp,draft,submitted,awaiting_po,awarded,decline,lost',
+        'assign_to'      => 'nullable|exists:users,id',
+        'description'    => 'nullable|string',
+        'submitted_at'   => 'nullable|date',
+        'decline_reason' => 'nullable|string',
+        'files.*'        => 'nullable|file|mimes:pdf,doc,docx,xlsx,xls,ppt,pptx,jpg,jpeg,png|max:10240',
     ]);
 
+    // Tentukan nilai submitted_at
+    $submittedDate = null;
+    $declineReason = null;
+
+    // Jika status SUBMITTED
+    if ($validated['status'] === 'submitted') {
+        $submittedDate = $validated['submitted_at'] ?? now()->toDateString();
+    }
+
+    // Jika status DECLINE
+    if ($validated['status'] === 'decline') {
+        $declineReason = $validated['decline_reason'] ?? null;
+    }
+
+    // Update Proposal
     $proposal->update([
-        'lead_id'     => $validated['lead_id'],
-        'title'       => $validated['title'],
-        'status'      => $validated['status'],
-        'assign_to'   => $validated['assign_to'] ?? null,
-        'description' => $validated['description'] ?? null,
+        'lead_id'        => $validated['lead_id'],
+        'title'          => $validated['title'],
+        'status'         => $validated['status'],
+        'assign_to'      => $validated['assign_to'] ?? null,
+        'description'    => $validated['description'] ?? null,
+        'submitted_at'   => $submittedDate,
+        'decline_reason' => $declineReason,
     ]);
 
+    // Upload file baru
     if ($request->hasFile('files')) {
         foreach ($request->file('files') as $file) {
             $path = $file->store('proposal_files', 'public');
 
             ProposalFile::create([
                 'proposal_id' => $proposal->id,
-                'file_name'    => $file->getClientOriginalName(),
-                'file_path'    => $path,
+                'file_name'   => $file->getClientOriginalName(),
+                'file_path'   => $path,
             ]);
         }
     }
@@ -212,6 +248,8 @@ public function update(Request $request, $id)
         ->route('proposals.show', $proposal->id)
         ->with('success', 'Proposal has been successfully updated!');
 }
+
+
 
 
 public function show2($id)
@@ -232,7 +270,74 @@ public function byProposalStatus($status)
     return view('proposal.index', compact('proposals', 'status'));
 }
 
+// Follow-up proposal methods
 
+    public function createFollowup(Proposal $proposal)
+    {
+        return view('proposal.followups.create', compact('proposal'));
+    }
+
+    public function storeFollowup(Request $request, Proposal $proposal)
+    {
+        $validated = $request->validate([
+            'followup_date' => 'required|date',
+            'type'          => 'required|in:call,chat,meeting,email,visit,other',
+            'notes'         => 'nullable|string',
+        ]);
+
+        $proposal->followups()->create($validated);
+
+    return redirect()->route('proposals.show', $proposal->id)
+                    ->with('success', 'Follow-up added!');
+    }
+
+    public function editFollowup(Proposal $proposal, $followupId)
+    {
+        $followup = $proposal->followups()->findOrFail($followupId);
+        return view('proposal.followups.edit', compact('proposal', 'followup'));
+    }
+
+    public function updateFollowup(Request $request, Proposal $proposal, $followupId)
+    {
+        $followup = $proposal->followups()->findOrFail($followupId);
+
+        $validated = $request->validate([
+            'followup_date' => 'required|date',
+            'type'          => 'required|in:call,chat,meeting,email,visit,other',
+            'notes'         => 'nullable|string',
+        ]);
+
+        $followup->update($validated);
+
+        return redirect()->route('proposals.show', $proposal->id)
+                         ->with('success', 'Follow-up updated!');
+    }
+    
+public function deleteFollowup(Proposal $proposal, $followupId)
+{
+    $followup = $proposal->followups()->findOrFail($followupId);
+    $followup->delete();
+
+    return redirect()->route('proposals.show', $proposal->id)
+                     ->with('success', 'Follow-up deleted!');
 }
 
+public function followupReminder()
+{
+    $proposals = Proposal::where('status', 'submitted')
+        ->where(function ($q) {
+            $q->whereDoesntHave('followups')                  // belum pernah follow up
+              ->orWhereHas('followups', function ($q2) {       // sudah followup tapi > 7 hari
+                  $q2->whereDate('followup_date', '<', now()->subDays(7));
+              });
+        })
+        ->get();
+
+    return view('proposal.modal_reminder', compact('proposals'));
+}
+
+
+
+
+}
   

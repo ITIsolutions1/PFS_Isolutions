@@ -33,10 +33,15 @@
 
 
 <x-app-layout>
+  @php
+    $filterStatus = request('status');
+@endphp
+
      <marquee behavior="scroll" direction="left" scrollamount="6" style="background-color: #ec1b2dff; color: #fce9ebff; padding: 10px; font-weight: bold;">
         <i class="bi bi-exclamation-triangle-fill me-2"></i>
         Sorry, this page is still under construction.
     </marquee>
+    
 <div class="container py-4">
 
   {{-- ALERTS --}}
@@ -202,6 +207,26 @@
     </div>
 </div>
 
+<div id="proposalReminderModal" class="modal fade" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content border-danger shadow-lg">
+      
+      <div class="modal-header bg-danger text-white">
+        <h5 class="modal-title">Submitted Follow-up Reminder</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body" id="proposalReminderContent">
+        <p class="text-center text-muted">Loading...</p>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+
+    </div>
+  </div>
+</div>
 
 
 
@@ -234,11 +259,23 @@
               <a href="{{ request()->fullUrlWithQuery(['sort' => 'status_asc']) }}" style="text-decoration: none; color: white; font-size: 11px;">&#9650;</a>
               <a href="{{ request()->fullUrlWithQuery(['sort' => 'status_desc']) }}" style="text-decoration: none; color: white; font-size: 11px;">&#9660;</a>
             </th>
-            <th style="width:10%">
+
+            @if($filterStatus === 'submitted')
+                <th>Submitted At</th>
+            @endif
+
+           
+
+
+            <th style="width:8%">
               <span>PIC</span>
               <a href="{{ request()->fullUrlWithQuery(['sort' => 'pic_asc']) }}" style="text-decoration: none; color: white; font-size: 11px;">&#9650;</a>
               <a href="{{ request()->fullUrlWithQuery(['sort' => 'pic_desc']) }}" style="text-decoration: none; color: white; font-size: 11px;">&#9660;</a>
             </th>
+
+             @if($filterStatus === 'decline')
+                <th style="width:10%">Decline Reason</th>
+            @endif
             <th>Description</th>
             <th class="text-center" style="width:10%">Action</th>
           </tr>
@@ -277,7 +314,21 @@
                 {{ ucfirst(str_replace('_', ' ', $proposal->status)) }}
               </span>
             </td>
+           @if($filterStatus === 'submitted')
+              <td>
+                  {{ $proposal->submitted_at ? \Carbon\Carbon::parse($proposal->submitted_at)->format('d M Y') : '-' }}
+              </td>
+          @endif
+
+     
+
+
             <td>{{ $proposal->assignedUser->name ?? '-' }}</td>
+                 @if($filterStatus === 'decline')
+              <td>
+                  {{ $proposal->decline_reason ?? '-' }}
+              </td>
+          @endif
             <td class="text-truncate" style="max-width: 250px;">{{ $proposal->description ?? '-' }}</td>
 
             <td class="text-center">
@@ -351,5 +402,43 @@
       justify-content: center;
   }
 </style>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const path = window.location.pathname;            // /proposals
+    const search = window.location.search;            // ?status=rfp (jika ada)
+
+    // Jika bukan /proposals ATAU ada query parameter (?status=...)
+    if (path !== "/proposals" || search !== "") {
+        return; // Jangan tampilkan popup
+    }
+
+    // Jika /proposals dan tanpa query → lanjut jalankan popup
+    fetch("{{ route('proposals.followupReminder') }}")
+        .then(res => res.text())
+        .then(html => {
+            document.getElementById("proposalReminderContent").innerHTML = html;
+
+            if (html.trim() !== "" && !html.includes("No proposals")) {
+                let modal = new bootstrap.Modal(document.getElementById('proposalReminderModal'));
+                modal.show();
+            }
+
+            setTimeout(() => {
+                const btn = document.getElementById("btnViewAllProposal");
+                if (btn) {
+                    btn.onclick = () => {
+                        document.getElementById("allProposalReminder").style.display = "block";
+                        btn.remove();
+                    };
+                }
+            }, 100);
+        });
+});
+</script>
+
+
+
 
 </x-app-layout>

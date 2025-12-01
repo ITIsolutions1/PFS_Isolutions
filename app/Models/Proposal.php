@@ -14,6 +14,8 @@ class Proposal extends Model
         'status',
         'assign_to',
         'description',
+        'submitted_at',
+        'decline_reason'
     ];
 
     public function lead()
@@ -35,6 +37,12 @@ class Proposal extends Model
     {
         return $this->hasMany(ProposalFile::class);
     }
+
+    public function followups()
+{
+    return $this->hasMany(ProposalFollowup::class);
+}
+
     
 
 }

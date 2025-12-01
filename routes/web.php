@@ -135,10 +135,31 @@ Route::middleware(['auth', 'admin'])->group(function () {
 
 
     //proposal routes
+    Route::get('/proposals/followup-reminder', [ProposalController::class, 'followupReminder'])
+    ->name('proposals.followupReminder');
     Route::resource('proposals', ProposalController::class);
     Route::get('proposals/show/{id}', [ProposalController::class, 'show2'])->name('proposals.show2');
     Route::get('/proposals/status/{status}', [ProposalController::class, 'byProposalStatus'])
     ->name('proposal.byStatus');
+
+
+      Route::get('/{proposal}/followups/create', [ProposalController::class, 'createFollowup'])
+        ->name('proposals.followups.create');
+
+    Route::post('/{proposal}/followups', [ProposalController::class, 'storeFollowup'])
+        ->name('proposals.followups.store');
+
+    Route::get('/{proposal}/followups/{followup}/edit', [ProposalController::class, 'editFollowup'])
+        ->name('proposals.followups.edit');
+    
+    Route::put('/{proposal}/followups/{followup}', [ProposalController::class, 'updateFollowup'])
+        ->name('proposals.followups.update');
+    
+    Route::delete('/{proposal}/followups/{followup}', [ProposalController::class, 'deleteFollowup'])->name('proposals.followups.delete');
+
+  
+
+
 
     // Route::get('experience/create/{rfp_id}', [ExperienceDetailController::class, 'createFromRfp'])->name('experience.createFromRfp');
     // Route::post('experience/store', [ExperienceDetailController::class, 'storeRfp'])->name('experience.storeRfp');

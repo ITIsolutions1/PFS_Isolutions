@@ -375,7 +375,7 @@
                         <td class="px-6 py-3 text-sm">{{ $experienceDetail->durations }}</td>
                         <td class="px-6 py-3 text-sm">{{ $experienceDetail->date_project_start }} - {{ $experienceDetail->date_project_end }}</td>
                         <td class="px-6 py-3 text-sm">{{ $experienceDetail->locations }}</td>
-                        <td class="px-6 py-3 text-sm">{{ $experienceDetail->scope_of_work }}</td>
+                        <td class="px-6 py-3 text-sm">{!! $experienceDetail->scope_of_work !!}</td>
                         <td class="px-6 py-3 text-sm">{{ $experienceDetail->status }}</td>
                         <td class="px-6 py-3 text-sm">Rp.{{ $experienceDetail->amount }}</td>
 

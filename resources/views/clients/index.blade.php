@@ -143,7 +143,7 @@
 
   <div class="app-content">
 
-    {{-- 🔍 Search & Filter --}}
+    <!-- {{-- 🔍 Search & Filter --}}
     <div class="search-bar-container d-flex gap-2">
       <div class="input-group search-bar">
         <span class="input-group-text"><i class="bi bi-search"></i></span>
@@ -156,7 +156,79 @@
           <option value="{{ strtolower($cat->name) }}">{{ $cat->name }}</option>
         @endforeach
       </select>
+    </div> -->
+
+    {{-- 🔍 Search & Filter --}}
+<div class="search-bar-container d-flex gap-2 align-items-center">
+
+  <div class="input-group search-bar">
+    <span class="input-group-text"><i class="bi bi-search"></i></span>
+    <input type="text" id="crm-search" class="form-control" placeholder="Search CRM...">
+  </div>
+
+  <select id="category-filter" class="form-select" style="max-width: 200px;">
+    <option value="">All Categories</option>
+    @foreach($categories as $cat)
+      <option value="{{ strtolower($cat->name) }}">{{ $cat->name }}</option>
+    @endforeach
+  </select>
+
+  {{-- ✅ BUTTON EXPORT --}}
+  <button class="btn btn-success"
+          data-bs-toggle="modal"
+          data-bs-target="#exportCrmModal">
+      <i class="bi bi-file-earmark-excel"></i> Export
+  </button>
+
+  {{-- ✅ BUTTON IMPORT --}}
+
+<form action="{{ route('crm.import') }}"
+      method="POST"
+      enctype="multipart/form-data"
+      class="d-flex align-items-center gap-2">
+
+    @csrf
+
+    <input type="file"
+           name="file"
+           id="importFile"
+           class="d-none"
+           accept=".csv,.xlsx"
+           required>
+
+    <div class="input-group" style="max-width: 300px;">
+        <input type="text"
+               id="fileName"
+               class="form-control form-control-sm"
+               placeholder="No file chosen"
+               readonly>
+
+        <button type="button"
+                class="btn btn-outline-secondary btn-sm"
+                onclick="document.getElementById('importFile').click()">
+            <i class="bi bi-folder2-open"></i>
+        </button>
     </div>
+
+<button type="submit"
+        class="btn btn-sm btn-primary d-flex align-items-center gap-1"
+        disabled
+        id="importBtn"
+          style="height: 38px;">
+        
+    <i class="bi bi-upload"></i>
+    <span>Import</span>
+</button>
+
+</form>
+
+
+
+
+
+
+</div>
+
 
     <div class="container-fluid">
       <div class="row">
@@ -270,7 +342,8 @@
                   <tbody id="crm-table-body">
       @foreach($clients as $index => $c)
         <tr>
-         <td>{{ $loop->iteration + ($clients->currentPage() - 1) * $clients->perPage() }}</td>
+
+        <td>{{ $loop->iteration }}</td>
 
           <td>{{ \Carbon\Carbon::parse($c->created_at)->translatedFormat('l, d-m-Y') }}</td>
           <!-- <td style="word-wrap: break-word; white-space: normal; max-width:150px;">
@@ -402,9 +475,8 @@
             </div>
 
             <div class="card-footer clearfix">
-              <div class="float-end">
-                {{ $clients->links('pagination::bootstrap-5') }}
-              </div>
+              <!-- <div class="float-end">
+              </div> -->
             </div>
           </div>
         </div>
@@ -426,7 +498,88 @@
   </div>
 </div>
 
+<!-- modal export -->
+ <!-- Modal Export CRM -->
+<div class="modal fade" id="exportCrmModal" tabindex="-1">
+  <div class="modal-dialog">
+    <form action="{{ route('crm.export') }}" method="POST" class="modal-content">
+      @csrf
+
+      <div class="modal-header">
+        <h5 class="modal-title">Export CRM ke Excel</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body">
+
+        <p class="text-muted mb-2">Pilih kolom yang akan di-export:</p>
+
+        @php
+          $fields = [
+              'name' => 'Name',
+              'position' => 'Position',
+              'company' => 'Company',
+              'category' => 'Category',
+
+              'email' => 'Email',
+              'phone' => 'Phone',
+              'address' => 'Address',
+              'website' => 'Website',
+              'notes' => 'Notes',
+          ];
+        @endphp
+
+        @foreach($fields as $key => $label)
+          <div class="form-check">
+            <input class="form-check-input"
+                   type="checkbox"
+                   name="columns[]"
+                   value="{{ $key }}"
+                   id="col_{{ $key }}">
+            <label class="form-check-label" for="col_{{ $key }}">
+              {{ $label }}
+            </label>
+          </div>
+        @endforeach
+
+      </div>
+
+      <div class="modal-footer">
+        <button type="button"
+                class="btn btn-secondary"
+                data-bs-dismiss="modal">
+            Cancel
+        </button>
+
+        <button type="submit" class="btn btn-success">
+            Export Excel
+        </button>
+      </div>
+
+    </form>
+  </div>
+</div>
+
+
 </main>
+
+<script>
+  const fileInput = document.getElementById('importFile');
+  const fileNameInput = document.getElementById('fileName');
+  const importBtn = document.getElementById('importBtn');
+
+  fileInput.addEventListener('change', () => {
+    if (fileInput.files.length > 0) {
+      fileNameInput.value = fileInput.files[0].name;
+      importBtn.disabled = false;
+    } else {
+      fileNameInput.value = 'No file chosen';
+      importBtn.disabled = true;
+    }
+  });
+</script>
+
+
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {

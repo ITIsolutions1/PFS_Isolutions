@@ -12,10 +12,43 @@ use App\Models\Rfp;
 use App\Models\Categories;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Carbon;
+use App\Exports\LeadsExport;
+use Maatwebsite\Excel\Facades\Excel;
 
 class LeadController extends Controller
 {
 
+public function export(Request $request)
+{
+    //  Validasi
+    $request->validate([
+        'columns' => 'required|array|min:1',
+        'category_id' => 'nullable|integer'
+    ]);
+
+    // Whitelist kolom yang boleh diexport
+    $allowedColumns = [
+        'crm_id',
+        'source',
+        'status',
+        'assigned_to',
+        'notes',
+        'category',
+    ];
+
+    $columns = array_values(
+        array_intersect($request->columns, $allowedColumns)
+    );
+
+    //  Ambil category aktif (dari halaman)
+    $categoryId = $request->category_id;
+
+    //  Download Excel (ikut category)
+    return Excel::download(
+        new LeadsExport($columns, $categoryId),
+        'leads_export.xlsx'
+    );
+}
 public function dashboard()
 {
     $user = auth()->user();

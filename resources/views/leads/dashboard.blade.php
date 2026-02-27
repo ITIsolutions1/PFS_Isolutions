@@ -192,8 +192,25 @@
     </div>
 </div>
 
+
 <div id="categoryContainer">
+
+
+
     <div class="stats-container">
+
+         <div class="stat-card" onclick="window.location='{{ route('leads.index') }}'">
+    <div class="inner">
+        <h3>{{ $totalLeads }}</h3>
+        <p>Total Leads</p>
+    </div>
+    <i class="bi bi-people stat-icon"></i>
+    
+    <div class="stat-footer">
+        <span>View All Leads</span>
+        <i class="bi bi-arrow-right-circle"></i>
+    </div>
+</div>
       @foreach($leadByCategory as $category)
         <div class="stat-card"
              onclick="window.location='{{ route('leads.byCategory', ['id' => $category->category_id]) }}'">
@@ -209,18 +226,7 @@
         </div>
       @endforeach
 
-      <div class="stat-card" onclick="window.location='{{ route('leads.index') }}'">
-    <div class="inner">
-        <h3>{{ $totalLeads }}</h3>
-        <p>Total Leads</p>
-    </div>
-    <i class="bi bi-people stat-icon"></i>
-    
-    <div class="stat-footer">
-        <span>View All Leads</span>
-        <i class="bi bi-arrow-right-circle"></i>
-    </div>
-</div>
+ 
 
     </div>
 </div>

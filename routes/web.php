@@ -92,6 +92,9 @@ Route::middleware(['auth', 'admin'])->group(function () {
     // LEADS ROUTES
 
    route::resource('leads', LeadController::class);
+   Route::post('/leads/export', [LeadController::class, 'export'])
+    ->name('leads.export');
+
    route::get('/leads-dashboard', [LeadController::class, 'dashboard'])->name('leads.dashboard');
    Route::get('/leads-dashboard/load-index', [LeadController::class, 'loadIndex'])
     ->name('leads.dashboard.loadIndex');
@@ -132,6 +135,7 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::get('broadcast/{broadcast}/edit', [BroadcastController::class, 'edit'])->name('broadcast.edit');
     Route::put('broadcast/{broadcast}', [BroadcastController::class, 'update'])->name('broadcast.update');
     Route::delete('broadcast/{broadcast}', [BroadcastController::class, 'destroy'])->name('broadcast.destroy');
+Route::post('/upload-email-image', [BroadcastController::class, 'uploadEmailImage']);
 
 
     //proposal routes
@@ -189,6 +193,8 @@ Route::middleware(['auth'])->group(function () {
     });
 
       Route::get('admin/crm', [CrmController::class, 'index'])->name('crm.index');
+      Route::post('/crm/export', [CrmController::class, 'export'])->name('crm.export');
+
     Route::get('admin/crm/create', [CrmController::class, 'create'])->name('crm.create');
     Route::post('admin/crm/store', [CrmController::class, 'store'])->name('crm.store');
     Route::get('admin/crm/{id}/edit', [CrmController::class, 'edit'])->name('crm.edit');
@@ -198,6 +204,9 @@ Route::middleware(['auth'])->group(function () {
     Route::put('/admin/crm/{id}/update-multiple', 
     [CrmController::class, 'updateMultiple']
 )->name('crm.updateMultiple');
+Route::post('admin/crm/import', [CrmController::class, 'import'])
+     ->name('crm.import');
+
 
 
     // Untuk update field CRM
@@ -210,6 +219,7 @@ Route::middleware(['auth'])->group(function () {
     
 Route::post('/leads/{lead}/persona', [LeadController::class, 'storePersona']);
 Route::post('/leads/{lead}/followups', [FollowUpController::class, 'storeshow']);
+
 
     
     Route::put('/followups/{lead_id}/bulk-update', [FollowUpController::class, 'bulkUpdate'])

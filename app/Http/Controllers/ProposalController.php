@@ -254,7 +254,7 @@ public function update(Request $request, $id)
 
 public function show2($id)
 {
-    $proposal = Proposal::with('lead.followUps','lead.crm','lead.persona', 'assignedUser', 'files.file_name')->findOrFail($id);
+    $proposal = Proposal::with('lead.followUps','lead.crm','lead.persona', 'assignedUser', 'files')->findOrFail($id);
     return view('proposal.show2', compact('proposal'));
 }
 

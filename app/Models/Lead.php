@@ -18,10 +18,16 @@ class Lead extends Model
         return $this->belongsTo(Crm::class, 'crm_id');
     }
 
+    // public function followUps()
+    // {
+    //     return $this->hasMany(FollowUp::class, 'lead_id');
+    // }
+
     public function followUps()
-    {
-        return $this->hasMany(FollowUp::class, 'lead_id');
-    }
+{
+    return $this->hasMany(FollowUp::class)->orderBy('date', 'desc');
+}
+
 
     public function persona()
     {

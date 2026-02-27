@@ -205,7 +205,7 @@
     <tr>
         <td ><b>Scope Of Works</b></td>
         <td >:</td>
-        <td ><div  style="width: 430px">{{$experiences->scope_of_work}}</div></td>                    
+        <td ><div  style="width: 430px">{!! $experiences->scope_of_work !!}</div></td>                    
     </tr>
 </table>
 

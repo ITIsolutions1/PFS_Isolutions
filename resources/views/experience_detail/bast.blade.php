@@ -38,13 +38,13 @@
         }
 
         .letak td {
-            font-size: 15px;
+            font-size: 14px;
             vertical-align: top;
             padding: 3px 0;
         }
 
         p, li {
-            font-size: 15px;
+            font-size: 14px;
         }
         li {
             margin-top: -5px;
@@ -56,18 +56,18 @@
             border-collapse: collapse;
             text-align: center;
             table-layout: fixed;
-            margin-top: 15px;
+            margin-top: 14px;
         }
         table.ttd td {
             border: 1px solid black;
             padding: 5px 10px;
-            font-size: 15px;
+            font-size: 14px;
         }
         table.ttd tr:nth-child(2) td {
             height: 100px;
         }
         table.ttd tr:nth-child(3) td {
-            height: 15px;
+            height: 14px;
         }
 
         /* Checkbox styling */
@@ -81,7 +81,7 @@
             display: flex;
             align-items: flex-start;
             gap: 8px;
-            font-size: 14px;
+            font-size: 11px;
             line-height: 1.4;
         }
         .checkbox-item input[type="checkbox"] {
@@ -150,10 +150,10 @@
 
     <!-- Description -->
     <div class="description">
-        <p><b>Description of Work/Project:</b></p>
-        <ul>
-            <li>{{ $experiences->scope_of_work }}</li>
-        </ul>
+        <p><b>Description of Work/Project:</b>
+    
+            {!! $experiences->scope_of_work !!}
+        </p>
 
         <p><b>Conditions of Handover:</b></p>
         <ul>
@@ -165,49 +165,7 @@
         </ul>
     </div>
 
-        <div class="checkbox-group">
-        <label class="checkbox-item">
-            <input type="checkbox" name="agree_logo">
-            <span>Agreement to allow the company logo to be displayed on documents and materials related to this project.</span>
-        </label>
-
-        <label class="checkbox-item">
-            <input type="checkbox" name="agree_announcement">
-            <span>Agreement to include information regarding this project in the company's official announcements or publications.</span>
-        </label>
-
-        <label class="checkbox-item">
-            <input type="checkbox" name="agree_profile">
-            <span>Agreement to display the company profile in promotional or publication materials related to this project.</span>
-        </label>
-    </div>
-
-
-    <!-- Closing paragraph -->
-    <p>
-        By signing this document, both parties confirm that the job handover has been carried out 
-        to mutual satisfaction and that the receiving party is now responsible for the continued 
-        progress or completion of the work.
-    </p>
-
-    <!-- Signature Table -->
-    <table class="ttd">
-        <tr>
-            <td>PT Intra Multi Global Solusi</td>
-            <td>Client</td>
-        </tr>
-        <tr>
-            <td></td>
-            <td></td>
-        </tr>
-        <tr>
-            <td>Indah Nursanti</td>
-            <td>{{ $experiences->client_name }}</td>
-        </tr>
-    </table>
-
-    <!-- Checkbox Agreement -->
-    <!-- <div class="checkbox-group">
+        <!-- <div class="checkbox-group">
         <label class="checkbox-item">
             <input type="checkbox" name="agree_logo">
             <span>Agreement to allow the company logo to be displayed on documents and materials related to this project.</span>
@@ -223,6 +181,56 @@
             <span>Agreement to display the company profile in promotional or publication materials related to this project.</span>
         </label>
     </div> -->
+
+
+    <!-- Closing paragraph -->
+    <p>
+        By signing this document, both parties confirm that the job handover has been carried out 
+        to mutual satisfaction and that the receiving party is now responsible for the continued 
+        progress or completion of the work.
+    </p>
+
+    <!-- Signature Table -->
+    <table class="ttd">
+        <tr>
+            <td>PT Intra Multi Global Solusi</td>
+            <td>{{ $experiences->client_name }}</td>
+        </tr>
+        <tr>
+            <td></td>
+            <td></td>
+        </tr>
+        <tr>
+            <td style="line-height: 1.3;">
+    <div><strong>Indah Nursanti</strong></div>
+    <div>Business Consultant & Strategic Advisor</div>
+    <div style="font-size: 9px">Certify in SE • AK • M.Ikom • CTM • CPR • CH • CIPM • CICS • MSME • POP</div>
+</td>
+
+             <!-- <td style="line-height: 1.3;">
+                <div><strong>Alan Rothnie</strong></div>
+                <div>Operation Manager</div>
+            </td> -->
+            <td></td>
+        </tr>
+    </table>
+
+    <!-- Checkbox Agreement -->
+   
+
+<div class="checkbox-group" style="font-size: 11px; margin-top: 8px;">
+    <label class="checkbox-item" style="display: flex; align-items: center; gap: 4px;">
+        <input type="checkbox" name="agree_logo">
+        <span>I hereby grant permission to ISolutions Indonesia to display the company logo on documents, presentations, proposals, and any other project-related materials, including use in official announcements, publications, reports, and communication materials as appropriate. This permission also includes the use of the logo in promotional or publication materials related to this project, such as digital platforms, 
+            brochures, presentations, and marketing documents.</span>
+    </label>
+
+    <!-- <label class="checkbox-item" style="display: flex; align-items: center; gap: 4px; margin-top: 4px;">
+        <input type="checkbox" name="agree_announcement">
+        <span>I don't agree</span>
+    </label> -->
+</div>
+
 
 </div>
 

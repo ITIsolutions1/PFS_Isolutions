@@ -45,63 +45,77 @@
     {{-- FILTER SECTION --}}
     <div class="card border-0 shadow-sm rounded-4 mb-4">
       <div class="card-body p-3">
-        <form method="GET"
-              action="{{ isset($selectedCategory)
-                  ? route('leads.byCategory', ['id' => $selectedCategory->id])
-                  : route('leads.index') }}">
+       <form method="GET"
+      action="{{ isset($selectedCategory)
+          ? route('leads.byCategory', ['id' => $selectedCategory->id])
+          : route('leads.index') }}">
 
-          <div class="row g-2 align-items-end">
+  <div class="row g-2 align-items-end">
 
-            {{-- Search by CRM Name --}}
-            <div class="{{ empty($selectedCategory) ? 'col-md-5' : 'col-md-8' }}">
-              <label for="search_name" class="form-label small fw-semibold text-muted mb-1">
-                Search by CRM Name
-              </label>
-              <input
-                type="text"
-                name="search_name"
-                id="search_name"
-                class="form-control form-control-sm"
-                placeholder="Enter CRM name..."
-                value="{{ request('search_name') }}"
-              >
-            </div>
+    {{-- Search --}}
+    <div class="{{ empty($selectedCategory) ? 'col-md-5' : 'col-md-8' }}">
+      <label class="form-label small fw-semibold text-muted mb-1">
+        Search by CRM Name
+      </label>
+      <input
+        type="text"
+        name="search_name"
+        class="form-control form-control-sm"
+        value="{{ request('search_name') }}"
+      >
+    </div>
 
-            {{-- Filter by Category (hanya muncul di halaman semua leads) --}}
-            @if(empty($selectedCategory))
-              <div class="col-md-3">
-                <label for="category_id" class="form-label small fw-semibold text-muted mb-1">
-                  Filter by Category
-                </label>
-                <select name="category_id" id="category_id" class="form-select form-select-sm">
-                  <option value="">All Categories</option>
-                  @foreach($categories as $cat)
-                    <option value="{{ $cat->id }}" {{ request('category_id') == $cat->id ? 'selected' : '' }}>
-                      {{ $cat->name }}
-                    </option>
-                  @endforeach
-                </select>
-              </div>
-            @endif
+    {{-- Category --}}
+    @if(empty($selectedCategory))
+      <div class="col-md-3">
+        <label class="form-label small fw-semibold text-muted mb-1">
+          Filter by Category
+        </label>
+        <select name="category_id" class="form-select form-select-sm">
+          <option value="">All Categories</option>
+          @foreach($categories as $cat)
+            <option value="{{ $cat->id }}" {{ request('category_id') == $cat->id ? 'selected' : '' }}>
+              {{ $cat->name }}
+            </option>
+          @endforeach
+        </select>
+      </div>
+    @endif
 
-            {{-- Buttons --}}
-            <div class="{{ empty($selectedCategory) ? 'col-md-4' : 'col-md-4' }}">
-              <div class="d-flex gap-2">
-                <button type="submit" class="btn btn-danger btn-sm px-3">
-                  <i class="bi bi-search me-1"></i> Apply
-                </button>
+    {{-- Buttons --}}
+    <div class="col-md-4">
+      <div class="d-flex gap-2">
 
-                <a href="{{ isset($selectedCategory)
-                    ? route('leads.byCategory', ['id' => $selectedCategory->id])
-                    : route('leads.index') }}"
-                   class="btn btn-outline-secondary btn-sm px-3">
-                  <i class="bi bi-arrow-repeat me-1"></i> Reset
-                </a>
-              </div>
-            </div>
+        {{-- APPLY --}}
+        <button type="submit" class="btn btn-danger btn-sm px-3">
+          <i class="bi bi-search me-1"></i> Apply
+        </button>
 
-          </div>
-        </form>
+        {{-- RESET --}}
+        <a href="{{ isset($selectedCategory)
+            ? route('leads.byCategory', ['id' => $selectedCategory->id])
+            : route('leads.index') }}"
+           class="btn btn-outline-secondary btn-sm px-3">
+          <i class="bi bi-arrow-repeat me-1"></i> Reset
+        </a>
+
+        {{-- EXPORT (AMAN) --}}
+        <button
+            type="button"
+            class="btn btn-success btn-sm px-3"
+            data-bs-toggle="modal"
+            data-bs-target="#exportLeadsModal">
+          <i class="bi bi-file-earmark-excel"></i> Export
+        </button>
+
+      </div>
+    </div>
+
+  </div>
+</form>
+
+
+        
       </div>
     </div>
 
@@ -216,7 +230,62 @@
       {{ $leads->appends(request()->query())->links('pagination::bootstrap-5') }}
     </div>
 
+    <!-- Modal Export Leads -->
+<div class="modal fade" id="exportLeadsModal" tabindex="-1">
+  <div class="modal-dialog">
+    <form action="{{ route('leads.export') }}" method="POST" class="modal-content">
+      @csrf
+
+      <input
+      type="hidden"
+      name="category_id"
+      value="{{ $selectedCategory->id ?? request('category_id') }}">
+
+      <div class="modal-header">
+        <h5 class="modal-title">Export Leads ke Excel</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body">
+
+        @php
+          $fields = [
+              'crm_id' => 'CRM ID',
+              'status' => 'Status',
+              'category' => 'Category',
+              'notes' => 'Notes',
+          ];
+        @endphp
+
+        @foreach($fields as $key => $label)
+          <div class="form-check">
+            <input class="form-check-input"
+                   type="checkbox"
+                   name="columns[]"
+                   value="{{ $key }}"
+                   id="lead_{{ $key }}">
+            <label class="form-check-label" for="lead_{{ $key }}">
+              {{ $label }}
+            </label>
+          </div>
+        @endforeach
+
+      </div>
+
+      <div class="modal-footer">
+        <button type="submit" class="btn btn-success">
+            Export Excel
+        </button>
+      </div>
+
+    </form>
   </div>
+</div>
+
+
+  </div>
+
+  
 
   <style>
     body { background-color: #fafafa; }

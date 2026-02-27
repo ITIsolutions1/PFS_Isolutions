@@ -114,10 +114,54 @@
             </div>
        </div>
 
-        <div>
+        <!-- <div>
             <label for="scope_of_work" class="block text-sm font-medium text-gray-700">Scope of Work (max 3 lines)</label>
             <textarea name="scope_of_work" id="scope_of_work" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm" required></textarea>
-        </div>
+        </div> -->
+
+<div>
+    <label for="scope_of_work" class="block text-sm font-medium text-gray-700">
+        Scope of Work (max 3 lines)
+    </label>
+
+    <!-- Hidden input yang menyimpan value -->
+    <input id="scope_of_work" 
+           type="hidden" 
+           name="scope_of_work"
+           value="{{ old('scope_of_work', $experienceDetail->scope_of_work ?? '') }}">
+
+    <!-- Editor TRIX -->
+    <trix-editor 
+        input="scope_of_work"
+        class="mt-1 block w-full bg-white border border-gray-300 rounded-md shadow-sm">
+    </trix-editor>
+</div>
+
+<!-- TRIX CSS & JS -->
+<link rel="stylesheet" href="https://unpkg.com/trix@2.0.8/dist/trix.css">
+<script src="https://unpkg.com/trix@2.0.8/dist/trix.umd.min.js"></script>
+
+<!-- Fix untuk bullet list & numbering hilang -->
+<style>
+    trix-editor ul {
+        list-style-type: disc !important;
+        margin-left: 18px !important;
+    }
+    trix-editor ol {
+        list-style-type: decimal !important;
+        margin-left: 18px !important;
+    }
+    trix-editor li {
+        display: list-item !important;
+    }
+
+    /* Optional: height biar mirip 3 baris */
+    trix-editor {
+        min-height: 70px;
+        max-height: 120px;
+        overflow-y: auto;
+    }
+</style>
 
         
         <div class="kontainer_upload_image grid grid-cols-3 gap-2">

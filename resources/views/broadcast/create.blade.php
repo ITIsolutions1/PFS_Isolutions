@@ -161,12 +161,18 @@
         </form>
     </div>
 </main>
+<style>
+.ql-font-arial { font-family: Arial, Helvetica, sans-serif; }
+.ql-font-times-new-roman { font-family: "Times New Roman", serif; }
+.ql-font-georgia { font-family: Georgia, serif; }
+.ql-font-verdana { font-family: Verdana, sans-serif; }
+</style>
 
 <!-- Quill CDN -->
 <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
 <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
 
-<script>
+<!-- <script>
 document.addEventListener("DOMContentLoaded", function () {
     // Quill editor init
     var quill = new Quill('#messageEditor', {
@@ -245,7 +251,80 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
 });
+</script> -->
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const quill = new Quill('#messageEditor', {
+        theme: 'snow',
+        placeholder: 'Type your message here...',
+        modules: {
+            toolbar: {
+                container: [
+                    ['bold', 'italic', 'underline'],
+                    [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+                    ['link', 'image'],
+                    ['clean']
+                ],
+                handlers: {
+                    image: imageHandler
+                }
+            }
+        }
+    });
+
+    function imageHandler() {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'image/*';
+        input.click();
+
+        input.onchange = async () => {
+            const file = input.files[0];
+            if (!file) return;
+
+            const formData = new FormData();
+            formData.append('image', file);
+
+            try {
+                const response = await fetch('/upload-email-image', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-CSRF-TOKEN': document
+                            .querySelector('meta[name="csrf-token"]').content
+                    }
+                });
+
+                const data = await response.json();
+
+                if (!data.url) {
+                    alert('Upload failed');
+                    return;
+                }
+
+                const range = quill.getSelection(true);
+                quill.insertEmbed(range.index, 'image', data.url);
+                quill.setSelection(range.index + 1);
+
+            } catch (err) {
+                console.error(err);
+                alert('Upload error');
+            }
+        };
+    }
+
+    window.submitForm = function () {
+        document.getElementById('messageInput').value =
+            quill.root.innerHTML;
+        return true;
+    };
+
+});
 </script>
+
+
+
 
 <script>
 document.addEventListener("DOMContentLoaded", function () {

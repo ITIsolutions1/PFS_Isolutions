@@ -5,12 +5,41 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Crm;
 use App\Models\Categories;
+use App\Exports\CrmExport;
+use App\Imports\CrmImport;
+use Maatwebsite\Excel\Facades\Excel;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 use Illuminate\Support\Facades\Storage;
 
 
+
 class CrmController extends Controller
 {
+    public function import(Request $request)
+{
+    $request->validate([
+        'file' => 'required|mimes:csv,xlsx'
+    ]);
+
+    Excel::import(new CrmImport, $request->file('file'));
+
+    return back()->with('success', 'Data berhasil diimport');
+}
+
+public function export(Request $request)
+{
+    $columns = $request->input('columns');
+
+    if (!$columns || !is_array($columns)) {
+        return back()->with('error', 'Pilih minimal satu kolom');
+    }
+
+    return Excel::download(
+        new CrmExport($columns),
+        'crm_export.xlsx'
+    );
+}
+
    public function index(Request $request) 
 {
     $categories = Categories::all();
@@ -90,8 +119,12 @@ class CrmController extends Controller
 }
 
 
-    $clients = $clientsQuery->paginate(50);
-    $crmCount = $clients->total();
+    // $clients = $clientsQuery->paginate(50);
+    // $crmCount = $clients->total();
+
+    $clients = $clientsQuery->get();
+    $crmCount = $clients->count();
+
 
     return view('clients.index', compact('clients', 'categories', 'crmCount'));
 }

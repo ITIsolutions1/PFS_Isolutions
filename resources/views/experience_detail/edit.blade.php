@@ -148,11 +148,61 @@
                 </div>
            </div>
     
-            <div>
+            <!-- <div>
                 <label for="scope_of_work" class="block text-sm font-medium text-gray-700">Scope of Work (max 3 lines)</label>
                 <textarea name="scope_of_work" id="scope_of_work" value="{{ old('scope_of_work', $experienceDetail->scope_of_work) }}" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm" required></textarea>
-            </div>
+            </div> -->
     
+<div>
+    <label for="scope_of_work" class="block text-sm font-medium text-gray-700">
+        Scope of Work (max 3 lines)
+    </label>
+
+    <input id="scope_of_work" type="hidden" 
+        name="scope_of_work"
+        value="">
+
+    <trix-editor 
+        id="trix_scope"
+        input="scope_of_work"
+        class="mt-1 block w-full border-gray-300 rounded-md shadow-sm bg-white">
+    </trix-editor>
+</div>
+
+<link rel="stylesheet" href="https://unpkg.com/trix@2.0.8/dist/trix.css">
+<script src="https://unpkg.com/trix@2.0.8/dist/trix.umd.min.js"></script>
+
+<script>
+document.addEventListener("trix-initialize", function () {
+    let content = `{!! old('scope_of_work', $experienceDetail->scope_of_work) !!}`;
+
+    document.getElementById("scope_of_work").value = content;
+    document.querySelector("#trix_scope").editor.loadHTML(content);
+});
+</script>
+
+<style>
+    trix-editor ul {
+        list-style-type: disc !important;
+        margin-left: 20px !important;
+    }
+
+    trix-editor ol {
+        list-style-type: decimal !important;
+        margin-left: 20px !important;
+    }
+
+    trix-editor li {
+        display: list-item !important;
+    }
+</style>
+
+
+
+
+
+
+
             {{-- <div>
                 <label for="image" class="block text-sm font-medium text-gray-700">Upload Images</label>
                 <input type="file" name="image[]" id="image" accept="image/*" onchange="previewImages(event)" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm" multiple>
@@ -391,5 +441,8 @@
     
     
     </script>
+
+
+
     </x-app-layout>
     

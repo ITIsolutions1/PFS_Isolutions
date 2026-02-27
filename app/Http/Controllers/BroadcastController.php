@@ -12,6 +12,23 @@ use App\Models\Categories;
 
 class BroadcastController extends Controller
 {
+
+
+public function uploadEmailImage(Request $request)
+{
+    $request->validate([
+        'image' => 'required|image|max:2048'
+    ]);
+
+    $path = $request->file('image')->store('email-images', 'public');
+
+   return response()->json([
+    'url' => secure_asset('storage/' . $path)
+]);
+
+}
+
+
     public function index()
     {
         $logs = Broadcasting::orderBy('created_at', 'desc')->paginate(10);

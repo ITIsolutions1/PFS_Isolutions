@@ -26,6 +26,7 @@
         <thead>
             <tr>
                 <th>Lead Name</th>
+                <th>Company</th>
                 <th>Category</th>
                 <th>Created At</th>
             </tr>
@@ -40,6 +41,9 @@
                         style="color: #dc3545; font-weight: 600; text-decoration: none;">
                             {{ $lead->crm->name ?? '-' }}
                         </a>
+                    </td>
+                    <td>
+                        {{ $lead->crm->company ?? '-' }}
                     </td>
                     
 
